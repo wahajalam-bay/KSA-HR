@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Card, Li, Chip, Bar, Empty, AvatarStack } from '@/components/ui/primitives';
 import { Badge, Icon } from '@/components/ui/icons';
+import { BrandLogo } from '@/components/ui/brand';
 import { Pie, Legend, Spark } from '@/components/charts';
 import { RAMP } from '@/lib/charts/palette';
 import { fmt, daysBetween } from '@/lib/format';
@@ -241,7 +242,7 @@ export function QuickActions() {
         {a('badge', 'Add a recruiter', 'staff profile and target', 'staff.new')}
       </div>
       <div className="mark">
-        <Icon name="logo" size={18} sw={2.2} /><b>bayut</b><i /><span>TA Team</span>
+        <BrandLogo variant="chip" className="brand-chip" alt="Bayut" /><i /><span>TA Team</span>
       </div>
     </Card>
   );

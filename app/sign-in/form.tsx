@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useActionState } from 'react';
 import { Icon } from '@/components/ui/icons';
+import { BrandLogo } from '@/components/ui/brand';
 import { Avatar } from '@/components/ui/primitives';
 import { checkEmail, signIn, setPassword, type SignInState } from './actions';
 
@@ -39,9 +40,12 @@ export function SignInForm({ orgName, legalName, timezone, sso }: {
   return (
     <div className="login" id="login">
       <div className="login-card">
-        <div className="login-brand">
-          <span className="logo"><Icon name="logo" size={22} sw={2} /></span>
-          <span className="nm"><b>{orgName}</b><span>Talent Acquisition</span></span>
+        <div className="login-brand stack">
+          {/* The real lockup, filled with the brand colour by CSS mask — see
+              app/styles/02-extra.css. It already says the name, so the line
+              under it says only what this application is. */}
+          <BrandLogo variant="login" alt={orgName} />
+          <span className="nm"><span>Talent Acquisition</span></span>
         </div>
 
         <h1 className="t-2">

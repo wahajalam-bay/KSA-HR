@@ -30,7 +30,6 @@ import { buildSteps, conditionText, APPROVER_TYPE_LABEL } from './approvals';
    ═════════════════════════════════════════════════════════════════════════════*/
 
 export const SETTINGS_TABS = [
-  { v: 'branding', t: 'Branding' },
   { v: 'org', t: 'Organisation' },
   { v: 'approvals', t: 'Approvals' },
   { v: 'access', t: 'Access' },

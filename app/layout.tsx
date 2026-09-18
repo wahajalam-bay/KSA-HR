@@ -16,7 +16,14 @@ export const metadata: Metadata = {
   title: 'Bayut KSA — Talent Acquisition',
   description: 'The Bayut KSA talent acquisition platform: manpower, requisitions, candidates, offers and onboarding.',
   robots: { index: false, follow: false },
-  icons: { icon: '/icon.svg' },
+  /* Next serves app/icon.png and app/apple-icon.png by convention; naming
+     them here as well would point at files that do not exist. */
+  manifest: '/manifest.webmanifest',
+  openGraph: {
+    title: 'Bayut KSA — Talent Acquisition',
+    description: 'Manpower, requisitions, candidates, offers and onboarding.',
+    images: ['/brand/bayut-source.jpg'],
+  },
 };
 
 export const viewport: Viewport = {

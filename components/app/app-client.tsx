@@ -688,6 +688,13 @@ function cycleTheme(): void {
   setTheme(order[(order.indexOf(currentTheme()) + 1) % 3]);
 }
 
+/* Which strips have already been wired. A WeakSet rather than an attribute on
+   the element: writing `data-snav` onto a node the server rendered is a
+   mutation React did not make, and React 19 reports it as a hydration
+   mismatch on every page with a tab strip. The set holds no strong reference,
+   so a strip that leaves the document is collected with it. */
+const wiredSubnavs = new WeakSet<HTMLElement>();
+
 /** Mark the tab strips that overflow, so their arrows show. */
 function markSubnavOverflow(): void {
   document.querySelectorAll<HTMLElement>('.snav-wrap').forEach((w) => {
@@ -698,8 +705,8 @@ function markSubnavOverflow(): void {
       w.classList.toggle('has-r', more && n.scrollLeft + n.clientWidth < n.scrollWidth - 4);
       w.classList.toggle('has-l', more && n.scrollLeft > 4);
     };
-    if (!n.dataset.snav) {
-      n.dataset.snav = '1';
+    if (!wiredSubnavs.has(n)) {
+      wiredSubnavs.add(n);
       n.addEventListener('scroll', update, { passive: true });
       const on = n.querySelector<HTMLElement>('button.on');
       if (on && n.scrollWidth > n.clientWidth + 4) {

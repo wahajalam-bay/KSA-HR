@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Card, Stepper } from '@/components/ui/primitives';
 import { Badge, Icon } from '@/components/ui/icons';
+import { BrandLogo } from '@/components/ui/brand';
 import { Line, Donut, Legend } from '@/components/charts';
 import { fmt } from '@/lib/format';
 import * as W from '@/lib/domain/window';
@@ -44,7 +45,7 @@ export function Hero({ data }: { data: OverviewData }) {
     <section className="card hero">
       <div className="hero-l">
         <div className="hero-brand">
-          <Icon name="logo" size={18} sw={2.2} /><b>bayut</b><i /><span>TA Team</span>
+          <BrandLogo variant="chip" className="brand-chip" alt="Bayut" /><i /><span>TA Team</span>
         </div>
         <Tile icon="brief" label="Open positions" value={fmt.int(data.open.count)}
           sub={<>{fmt.int(data.open.openings)} openings · {fmt.int(data.open.opened)} opened{' '}

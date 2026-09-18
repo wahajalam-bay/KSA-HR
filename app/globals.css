@@ -27,6 +27,10 @@
 @import './styles/02-extra.css';
 @import './styles/03-theme-neo.css';
 @import './styles/04-parity.css';
+/* The Bayut Dashboard Design System v3: the colour system and the
+   interaction language, applied to the structure above. Loaded last so
+   its token values win. */
+@import './styles/05-bayut-ds.css';
 
 /* ── Fonts ─────────────────────────────────────────────────────────────────
    Manrope is the closest open face to the reference. It is loaded by the

@@ -4,7 +4,6 @@ import { currentViewer } from '@/lib/auth/session';
 import { navCounts, orgSettings } from '@/lib/queries/shell';
 import { clockOf } from '@/lib/clock';
 import { AppClient } from '@/components/app/app-client';
-import { BackgroundArt } from '@/components/app/background';
 import { Sidebar, TabBar } from '@/components/app/shell';
 import { ViewerProvider } from '@/components/app/viewer-context';
 
@@ -22,7 +21,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <ViewerProvider viewer={viewer} counts={counts} theme={theme} orgName={String(org.org_name ?? 'Bayut KSA')}>
       <AppClient isPortal={viewer.isPortal}>
-        <BackgroundArt />
         {/* Said out loud when the request's clock is being held to a fixed
             instant, so the visual harness can refuse to compare a production
             build — which rejects the override — against frozen captures. It

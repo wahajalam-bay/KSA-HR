@@ -1,0 +1,515 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   BAYUT DASHBOARD DESIGN SYSTEM — UNIVERSAL KIT v3
+   Bayut Saudi Arabia · PropForce KSA · August 2026
+
+   The colour system and interaction language of the kit, applied to this
+   product's existing structure. Nothing here changes a layout, a component or
+   a flow: it re-points the tokens the rest of the stylesheets already consume,
+   and adds the shell treatment the kit specifies — a green rail — plus the
+   interaction states the kit asks every clickable thing to have.
+
+   Loaded last so its token values win, which is all it needs to do: every
+   colour in 01-design.css and 03-theme-neo.css is already a `var()`, so the
+   whole product follows from this block. The handful of rules below the tokens
+   are the shell and the interaction states, which are genuinely new.
+
+   ▸ Source of the values: Bayut-Dashboard-Design-System-v3.pdf §1.2–1.4 and
+     its reference implementation, IS-Performance-Dashboard.html.
+   ▸ Semantics stay semantic: red is negative, amber is warning, blue is
+     information, violet keeps its meaning. Green is the brand and the
+     interaction colour, never a replacement for those.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* ── §1.2 brand core & the green scale g1→g6 ───────────────────────────── */
+  --bayut-green:#0d7a3f;
+  --bayut-dark:#063d24;
+  --g1:#0d7a3f; --g2:#10935a; --g3:#27a96d;
+  --g4:#5cc08a; --g5:#a8dbbe; --g6:#ddf1e5;
+  --accent:#08643a; --accent-2:#0a5c3d;
+
+  /* The product's own names, re-pointed at the scale. Everything downstream
+     already reads these, so this is the whole re-tint. */
+  --brand-700:#063d24;
+  --brand-600:#08643a;   /* pressed / hover */
+  --brand-500:#0d7a3f;   /* PRIMARY — Bayut green */
+  --brand-400:#27a96d;
+  --brand-300:#5cc08a;
+  --brand-tint:#ddf1e5;
+  --brand-tint-2:#a8dbbe;
+
+  /* ── semantics: the kit's values, meanings unchanged ───────────────────── */
+  --ok:#0d7a3f;      --ok-tint:#ddf1e5;
+  --warn:#b45309;    --warn-tint:#fdf1e3;
+  --bad:#dc2626;     --bad-tint:#fdeaea;
+  --info:#1d6cb0;    --info-tint:#e7f0f9;
+  --violet:#6d28d9;  --violet-tint:#efeafd;
+
+  /* ── §1.2 surfaces ─────────────────────────────────────────────────────── */
+  --ground:#f4f8f5;
+  --ground-2:#edf5ef;
+  --surface:#ffffff;
+  --surface-2:#f6fbf7;
+  --surface-3:#eef6f0;
+  --sep:#e4ece7;
+  --sep-strong:#c4d8ca;
+  --ink:#1a2e22;
+  --ink-2:#3d5546;
+  --ink-3:#506b5a;
+  --ink-4:#7e9488;
+  --on-brand:#ffffff;
+  --grid:#e4ece7;
+
+  /* ── §1.3 gradients ────────────────────────────────────────────────────── */
+  --grad-header:linear-gradient(135deg,#063d24 0%,#0a5c3d 45%,#0d7a3f 100%);
+  --grad-hero:linear-gradient(150deg,#0d7a3f 0%,#08643a 52%,#063d24 100%);
+  --grad-green:linear-gradient(135deg,#10935a,#0d7a3f);
+
+  /* ── the shell: what the header and the rail are made of ──────────────── */
+  --nav-bg:var(--grad-header);
+  --nav-ink:rgba(255,255,255,.92);
+  --nav-ink-2:rgba(255,255,255,.70);
+  --nav-ink-3:rgba(255,255,255,.52);
+  --nav-line:rgba(255,255,255,.16);
+  --nav-hover:rgba(255,255,255,.12);
+  --nav-on:rgba(255,255,255,.18);
+  --nav-on-ink:#ffffff;
+
+  /* ── elevation ─────────────────────────────────────────────────────────
+     The neumorphic look is a pair of shadows: a dark one below-right and a
+     white one above-left. The white one is the glow — it is what made every
+     card, row, chip, avatar and panel look lit from within. Switching it off
+     leaves the soft directional shadow on its own, which is the elevation the
+     design kit actually asks for, and it is one token rather than a hundred
+     rules. */
+  --nm-light:transparent;
+  --nm-dark:rgba(6,61,36,.14);
+
+  /* ── interaction: one definition of each state, used everywhere ────────── */
+  --hover-bg:rgba(13,122,63,.07);
+  --hover-line:rgba(13,122,63,.28);
+  --active-bg:rgba(13,122,63,.13);
+  --selected-bg:var(--brand-tint);
+  --selected-ink:var(--brand-600);
+  --focus-ring:0 0 0 3px rgba(13,122,63,.32);
+  --row-hover:#ddf1e5;
+
+  /* ── §1.2 data-viz, derived from the green and hue-separated ──────────── */
+  --cat-1:#0d7a3f; --cat-2:#1d6cb0; --cat-3:#d97706; --cat-4:#6d28d9;
+  --seq-1:#a8dbbe; --seq-2:#5cc08a; --seq-3:#27a96d; --seq-4:#0d7a3f;
+
+  /* ── the pipeline ramp, walked down the same scale ────────────────────── */
+  --stg-1:#94a89d; --stg-2:#5cc08a; --stg-3:#27a96d;
+  --stg-4:#10935a; --stg-5:#0d7a3f; --stg-6:#063d24;
+}
+
+/* ── the kit's dark mode ─────────────────────────────────────────────────── */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --nm-light:transparent;
+    --nm-dark:rgba(0,0,0,.45);
+    --ground:#0e1512;
+    --ground-2:#141d18;
+    --surface:#16201b;
+    --surface-2:#141d18;
+    --surface-3:#1e2a24;
+    --ink:#e4ece7;
+    --ink-2:#b9c9c0;
+    --ink-3:#94a89d;
+    --ink-4:#74857c;
+    --sep:#28362f;
+    --sep-strong:#3a4c43;
+    --grid:#28362f;
+    --brand-500:#27a96d;
+    --brand-600:#3ecf8e;
+    --brand-400:#5cc08a;
+    --brand-tint:#1a2e22;
+    --brand-tint-2:#28362f;
+    --ok:#3ecf8e;      --ok-tint:#14261d;
+    --warn:#d97706;    --warn-tint:#2a1f10;
+    --bad:#ef4444;     --bad-tint:#2b1417;
+    --info:#4b91d8;    --info-tint:#13212e;
+    --violet:#9b6dfa;  --violet-tint:#1d1630;
+    --focus-ring:0 0 0 3px rgba(62,207,142,.42);
+    --hover-bg:rgba(62,207,142,.10);
+    --hover-line:rgba(62,207,142,.30);
+    --active-bg:rgba(62,207,142,.18);
+    --row-hover:#1a2e22;
+    --seq-1:#1a2e22; --seq-2:#27a96d; --seq-3:#5cc08a; --seq-4:#a8dbbe;
+  }
+}
+:root[data-theme="dark"]{
+    --nm-light:transparent;
+    --nm-dark:rgba(0,0,0,.45);
+  --ground:#0e1512;
+  --ground-2:#141d18;
+  --surface:#16201b;
+  --surface-2:#141d18;
+  --surface-3:#1e2a24;
+  --ink:#e4ece7;
+  --ink-2:#b9c9c0;
+  --ink-3:#94a89d;
+  --ink-4:#74857c;
+  --sep:#28362f;
+  --sep-strong:#3a4c43;
+  --grid:#28362f;
+  --brand-500:#27a96d;
+  --brand-600:#3ecf8e;
+  --brand-400:#5cc08a;
+  --brand-tint:#1a2e22;
+  --brand-tint-2:#28362f;
+  --ok:#3ecf8e;      --ok-tint:#14261d;
+  --warn:#d97706;    --warn-tint:#2a1f10;
+  --bad:#ef4444;     --bad-tint:#2b1417;
+  --info:#4b91d8;    --info-tint:#13212e;
+  --violet:#9b6dfa;  --violet-tint:#1d1630;
+  --focus-ring:0 0 0 3px rgba(62,207,142,.42);
+  --hover-bg:rgba(62,207,142,.10);
+  --hover-line:rgba(62,207,142,.30);
+  --active-bg:rgba(62,207,142,.18);
+  --row-hover:#1a2e22;
+  --seq-1:#1a2e22; --seq-2:#27a96d; --seq-3:#5cc08a; --seq-4:#a8dbbe;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE GREEN SHELL
+
+   The rail and the header carry the brand; the content area stays light so
+   dense tables and forms keep their contrast. That split is the kit's own
+   rule — gradient on the chrome, never on content cards or tables.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.side{
+  background:var(--grad-header);
+  background-attachment:fixed;
+  border-right:0;
+  box-shadow:0 12px 32px -10px rgba(6,61,36,.32);
+  color:var(--nav-ink);
+}
+
+/* The rail is the only thing on green, so it is the only thing reading off
+   the on-green ink. The top bar keeps the page's own. */
+.side .nav-item,
+.side .side-foot{ color:var(--nav-ink-2) }
+.side-brand .nm>span{ color:var(--nav-ink-3) }
+
+/* The rail's own chrome. The mark keeps its chip so it stays legible against
+   the gradient behind it. */
+.side .logo{
+  background:rgba(255,255,255,.14);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+  border:0;
+}
+.side .searchbox{
+  background:rgba(255,255,255,.12);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.20);
+  color:var(--nav-ink);
+}
+.side .searchbox input,
+.side .searchbox::placeholder{ color:var(--nav-ink-2) }
+.side .searchbox input::placeholder{ color:var(--nav-ink-3) }
+.side .searchbox kbd{
+  background:rgba(255,255,255,.14); color:var(--nav-ink-2);
+  box-shadow:none; border:0;
+}
+.side-foot{ border-top:1px solid var(--nav-line) }
+
+/* Nothing on the rail keeps the neumorphic light shadow. Those shadows are a
+   white glow — `-4px -4px 10px #fff` — built to lift a control off a cream
+   ground; on the green they read as a halo around the avatar and the chips.
+   Inside the rail the elevation comes from the ink instead. */
+.side .av,
+.side .btn,
+.side .chip,
+.side .logo,
+.side .searchbox,
+.side .userchip,
+.side .nav-item{ --nm-light:transparent }
+.side .av{ box-shadow:0 2px 8px -2px rgba(0,0,0,.35) }
+
+/* Navigation states. The kit asks for hover, current and pressed to be
+   separable at a glance — so they are a wash, a solid and a deeper solid. */
+.nav-item{ color:var(--nav-ink-2); border-radius:var(--r-pill); transition:background .18s,color .18s }
+/* The glyph inherits the page's muted ink otherwise, which on the green is
+   barely there. On the rail it reads off the on-green scale like the label. */
+.side .nav-item .ic{ color:var(--nav-ink-2) }
+.side .nav-item:hover .ic,
+.side .nav-item.on .ic{ color:#fff }
+.side .searchbox svg{ color:var(--nav-ink-2) }
+.nav-item:hover{ background:var(--nav-hover); box-shadow:none; color:#fff }
+.nav-item:active{ background:rgba(255,255,255,.22) }
+.nav-item.on{
+  background:var(--nav-on); color:var(--nav-on-ink); font-weight:700;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+}
+.nav-item.on .ic{ color:#fff }
+.nav-item .cnt{ background:rgba(255,255,255,.16); color:var(--nav-ink); box-shadow:none }
+.nav-item.on .cnt{ background:#fff; color:var(--brand-700) }
+.userchip{ color:var(--nav-ink-2) }
+.userchip:hover{ background:var(--nav-hover); box-shadow:none; color:#fff }
+
+
+
+/* ── The header, on the same green ─────────────────────────────────
+   The rail and the header are one piece of chrome, so they carry the same
+   gradient; the content below stays light and keeps its contrast. */
+.topbar{
+  background:var(--grad-header);
+  border:0;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  box-shadow:0 12px 30px -18px rgba(6,61,36,.65);
+  color:var(--nav-ink);
+}
+
+/* Everything on it reads off the on-green ink rather than the page's. */
+.topbar .title h1{ color:#fff }
+.topbar .title .sub,
+.topbar .sub{ color:var(--nav-ink-2) }
+.topbar .crumb,
+.topbar .crumb span{ color:var(--nav-ink-3) }
+.topbar .crumb button{ color:var(--nav-ink-2) }
+.topbar .crumb button:hover{ color:#fff }
+
+/* The neumorphic light shadow is a white glow, built to lift a control off a
+   cream ground. On the green it is a halo, so it is switched off up here and
+   the elevation comes from the ink instead. */
+.topbar .btn,
+.topbar .av,
+.topbar .chip,
+.topbar .searchbox{ --nm-light:transparent }
+.topbar .btn.ghost,
+.topbar .btn.icon.ghost{
+  background:rgba(255,255,255,.12); color:#fff;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+}
+.topbar .btn.ghost:hover,
+.topbar .btn.icon.ghost:hover{ background:rgba(255,255,255,.22); color:#fff }
+.topbar .btn.out{
+  background:rgba(255,255,255,.14); color:#fff; border-color:transparent;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.30);
+}
+.topbar .btn.out:hover{ background:rgba(255,255,255,.24) }
+/* The primary action has to separate from the gradient behind it, so up here
+   it is white on green rather than green on green. */
+.topbar .btn.pri{
+  background:#fff; color:var(--brand-700);
+  box-shadow:0 6px 18px -8px rgba(0,0,0,.45);
+}
+.topbar .btn.pri:hover:not([disabled]){ background:#eef6f0; color:var(--brand-700) }
+.topbar .btn.pri:active:not([disabled]){ background:#ddf1e5 }
+/* The unread count rings itself against the gradient. */
+.topbar .bell .dot,
+.topbar .bell .cnt{ box-shadow:0 0 0 2px rgba(6,61,36,.9) }
+
+/* The phone's tab bar is the same chrome. */
+.tabbar{
+  background:var(--grad-header); border-top:0; color:var(--nav-ink-2);
+  box-shadow:0 -10px 26px -14px rgba(6,61,36,.55);
+}
+.tabbar button{ color:var(--nav-ink-3); --nm-light:transparent }
+.tabbar button.on{ color:#fff }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTION
+
+   The kit's rule: if it is clickable it says so, and if it is not it does not
+   pretend to be. One definition of each state, so a row, a card and a chip all
+   behave the same way.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* A visible keyboard focus everywhere, in the brand's colour. */
+:where(a, button, [role="button"], [tabindex]:not([tabindex="-1"]),
+       input, select, textarea, summary):focus-visible{
+  outline:none;
+  box-shadow:var(--focus-ring);
+  border-radius:inherit;
+}
+
+/* Anything carrying an action is a pointer, and lifts on hover. */
+[data-act]:not(input):not(select):not(textarea):not([disabled]){ cursor:pointer }
+[data-act][disabled],
+[data-act][aria-disabled="true"]{ cursor:not-allowed }
+
+/* Rows and cards that open something. */
+.li.act:hover,
+.li:is(button):hover,
+tbody tr[data-act]:hover td,
+.t tbody tr[data-act]:hover td{ background:var(--row-hover) }
+.card[data-act]:hover,
+.kpi[data-act]:hover{
+  box-shadow:var(--raise-lg, 0 20px 44px -14px rgba(13,122,63,.30));
+  border-color:var(--hover-line);
+}
+.li:is(button):active,
+tbody tr[data-act]:active td{ background:var(--active-bg) }
+
+/* Chips, tabs and pills that pick something. */
+.chip[data-act]:hover,
+.tag[data-act]:hover{ background:var(--hover-bg); box-shadow:inset 0 0 0 1px var(--hover-line) }
+.subnav button:hover{ color:var(--brand-500) }
+.subnav button.on{ color:var(--brand-500); font-weight:700 }
+.seg button:hover{ background:var(--hover-bg) }
+.seg button.on{ background:var(--brand-tint); color:var(--selected-ink) }
+
+/* Controls. Primary is the brand, and every state of it is deliberate. */
+.btn{ transition:background .18s, box-shadow .18s, color .18s, transform .06s }
+.btn:active:not([disabled]){ transform:translateY(.5px) }
+.btn.pri{ background:var(--brand-500); color:var(--on-brand) }
+.btn.pri:hover:not([disabled]){ background:var(--brand-600) }
+.btn.pri:active:not([disabled]){ background:var(--brand-700) }
+.btn.out:hover:not([disabled]){ border-color:var(--hover-line); background:var(--hover-bg) }
+.btn.ghost:hover:not([disabled]){ background:var(--hover-bg) }
+.btn[disabled],
+.btn[aria-disabled="true"]{ opacity:.5; cursor:not-allowed; box-shadow:none }
+
+/* Fields say when they are focused, in the brand's colour. */
+.inp:focus,
+.inp:focus-visible{ outline:none; box-shadow:var(--focus-ring) }
+.inp:hover:not(:focus):not([disabled]){ border-color:var(--hover-line) }
+.inp[disabled],
+.inp[readonly]{ opacity:.7; cursor:not-allowed }
+
+/* Panels and the palette: the row under the cursor is unmistakable. */
+.sheet .li:is(button):hover,
+.palette li:hover,
+.palette li[aria-selected="true"]{ background:var(--brand-tint) }
+.palette li[aria-selected="true"]{ box-shadow:inset 2px 0 0 var(--brand-500) }
+
+/* A table header that sorts is a control. */
+.t thead th[data-act]:hover{ color:var(--brand-500) }
+
+/* Motion, only where somebody wants it. */
+@media (prefers-reduced-motion:reduce){
+  *, *::before, *::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   THE COLLAPSED RAIL
+
+   Every module keeps its icon, every icon keeps its name. The name is moved
+   out of the layout rather than removed from the document, so the button still
+   has an accessible name — `display:none` on the label left twelve buttons
+   with nothing for a screen reader to read.
+
+   The tooltip is the interface's own, drawn on the item, shown on hover and on
+   keyboard focus. It never changes the rail's width, never covers its own
+   icon, and hovering it does not expand anything: the rail's width is a
+   breakpoint, not a hover state.
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width:1100px){
+  /* The rail stops clipping so a tooltip can sit beside it. The background
+     still rounds — that is `background-clip`, not `overflow` — and the icons
+     fit without scrolling at this width, so nothing is lost. */
+  .side{ overflow:visible }
+  .nav{ overflow:visible }
+
+  /* The name leaves the layout but stays in the document. */
+  .nav-item .lb{
+    display:block;
+    position:absolute; width:1px; height:1px;
+    margin:-1px; padding:0; border:0;
+    clip-path:inset(50%); overflow:hidden; white-space:nowrap;
+  }
+
+  /* Search becomes the first icon on the rail rather than disappearing. */
+  .side-search{ display:block; padding:0 10px 10px }
+  .searchbox{
+    justify-content:center; padding:11px 0; cursor:pointer;
+    border-radius:var(--r-sm);
+  }
+  .searchbox input, .searchbox kbd{ display:none }
+
+  /* The count sits on the icon's top-right corner, clear of the glyph. Two
+     digits fit; three do not on a 74-pixel rail, so those become a dot and
+     the tooltip carries the figure. */
+  .nav-item{ position:relative }
+  .nav-item .cnt{
+    display:block;
+    position:absolute; top:0; right:2px;
+    min-width:14px; height:14px; padding:0 3px;
+    font-size:8.5px; line-height:14px; font-weight:700; text-align:center;
+    letter-spacing:-.02em;
+    border-radius:99px;
+    background:#fff; color:var(--brand-700);
+    /* A ring in the rail's own dark green, so the badge reads as sitting on
+       top of the glyph rather than merging into it. */
+    box-shadow:0 0 0 2px rgba(6,61,36,.85);
+    pointer-events:none;
+  }
+  /* Three digits do not fit; the dot says "there are some" and the tooltip
+     says how many. */
+  .nav-item[data-count="wide"] .cnt{
+    width:7px; min-width:0; height:7px; padding:0;
+    top:3px; right:9px;
+    font-size:0; line-height:0; overflow:hidden;
+  }
+
+  /* The current module stays obvious with no tooltip open. */
+  .nav-item.on{ box-shadow:inset 0 0 0 1px rgba(255,255,255,.34) }
+  .nav-item.on::before{
+    content:''; position:absolute; left:-10px; top:50%;
+    width:3px; height:20px; margin-top:-10px;
+    border-radius:0 3px 3px 0; background:#fff;
+  }
+
+  /* ── the tooltip ──────────────────────────────────────────────────────
+     One rule for every control on the rail. It is `aria-hidden` by
+     construction — a pseudo-element is not in the accessibility tree — so it
+     never doubles the name the button already has. */
+  .side [data-tip]{ position:relative }
+  .side [data-tip]::after{
+    content:attr(data-tip);
+    position:absolute; left:calc(100% + 12px); top:50%;
+    transform:translateY(-50%) translateX(-4px);
+    z-index:80;
+    padding:7px 11px;
+    border-radius:var(--r-sm);
+    background:var(--surface); color:var(--ink);
+    box-shadow:0 12px 32px -10px rgba(6,61,36,.32), 0 0 0 1px var(--sep);
+    font-size:12.5px; font-weight:600; line-height:1.2; letter-spacing:0;
+    white-space:nowrap; text-transform:none;
+    opacity:0; pointer-events:none;
+    transition:opacity .14s var(--ease, ease), transform .14s var(--ease, ease);
+    transition-delay:.18s;
+  }
+  /* the little nib */
+  .side [data-tip]::before{
+    content:''; position:absolute; left:calc(100% + 6px); top:50%;
+    width:8px; height:8px; margin-top:-4px;
+    transform:rotate(45deg) translateX(-2px);
+    background:var(--surface); box-shadow:-1px 1px 0 var(--sep);
+    z-index:80; opacity:0; pointer-events:none;
+    transition:opacity .14s ease; transition-delay:.18s;
+  }
+  .side [data-tip]:hover::after,
+  .side [data-tip]:focus-visible::after{ opacity:1; transform:translateY(-50%) translateX(0) }
+  .side [data-tip]:hover::before,
+  .side [data-tip]:focus-visible::before{ opacity:1 }
+
+  /* The current item already draws a marker on its left; its tooltip must not
+     fight it. */
+  .nav-item.on[data-tip]::before{
+    content:''; left:-10px; top:50%; width:3px; height:20px; margin-top:-10px;
+    border-radius:0 3px 3px 0; background:#fff; transform:none;
+    box-shadow:none; opacity:1; transition:none;
+  }
+  .nav-item.on[data-tip]:hover::before,
+  .nav-item.on[data-tip]:focus-visible::before{ opacity:1 }
+
+  @media (prefers-reduced-motion:reduce){
+    .side [data-tip]::after,
+    .side [data-tip]::before{ transition:none; transform:translateY(-50%) }
+  }
+}
+
+/* Expanded, nothing draws a tooltip — the label is right there. */
+@media (min-width:1101px){
+  .side [data-tip]::after,
+  .side [data-tip]::before{ content:none }
+}

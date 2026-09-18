@@ -4,6 +4,7 @@ import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import { Icon, type IconName } from '@/components/ui/icons';
 import { Avatar } from '@/components/ui/primitives';
+import { BrandLogo } from '@/components/ui/brand';
 import { fmt } from '@/lib/format';
 import type { Viewer } from '@/lib/auth/session';
 import type { NavCounts } from '@/lib/queries/shell';
@@ -83,15 +84,29 @@ export function Sidebar({ viewer, counts, orgName }: {
   return (
     <aside className="side" id="side">
       <div className="side-brand">
-        <span className="logo"><Icon name="logo" size={19} sw={2} /></span>
-        <span className="nm"><b>{orgName}</b><span>Talent Acquisition</span></span>
+        {/* The lockup carries the name, so the line under it is the product
+            and the entity — not the word "Bayut" a second time. The chip is
+            what a collapsed rail shows instead; CSS picks between them. */}
+        <span className="logo" aria-hidden="true">
+          <BrandLogo variant="compact" on="brand" alt="" height={19} />
+        </span>
+        <span className="nm">
+          {/* The rail is brand green in both themes, so the lockup on it is the
+              white artwork in both — the theme-swapped pair is for a card or a
+              page, where the ground actually changes. */}
+          <BrandLogo variant="full" on="brand" alt={orgName} />
+          <span>KSA · Talent Acquisition</span>
+        </span>
       </div>
 
       {!viewer.isPortal && (
         <div className="side-search">
-          <div className="searchbox" data-act="palette.open">
+          {/* Collapsed, this is the rail's first icon rather than something
+              that disappears — search is how people move around here. */}
+          <div className="searchbox" data-act="palette.open" data-tip="Search or jump to…"
+            role="button" tabIndex={0} aria-label="Search or jump to">
             <Icon name="search" size={15} />
-            <input placeholder="Search or jump to…" readOnly tabIndex={-1} />
+            <input placeholder="Search or jump to…" readOnly tabIndex={-1} aria-hidden="true" />
             <kbd>⌘K</kbd>
           </div>
         </div>
@@ -105,7 +120,17 @@ export function Sidebar({ viewer, counts, orgName }: {
               const n = i.count ? counts[i.count] : null;
               return (
                 <button key={i.v} className={`nav-item${view === i.v ? ' on' : ''}`}
-                  data-act="go" data-v={`/${i.v}`} title={i.t}>
+                  data-act="go" data-v={`/${i.v}`}
+                  /* `data-tip` rather than `title`: the interface draws its own
+                     tooltip, and a native one on top of it would be two. The
+                     count rides along so a collapsed rail can say "Jobs · 29"
+                     where the badge only has room for the number. */
+                  data-tip={n != null ? `${i.t} · ${fmt.int(n)}` : i.t}
+                  /* Three digits do not fit a badge on a 74-pixel rail, so a
+                     big number becomes a dot and the tooltip carries the
+                     figure — clean alignment over a squeezed number. */
+                  data-count={n == null ? undefined : n > 99 ? 'wide' : 'fits'}
+                  aria-current={view === i.v ? 'page' : undefined}>
                   <span className="ic"><Icon name={i.ic} size={17} /></span>
                   <span className="lb">{i.t}</span>
                   {n != null && <span className="cnt">{fmt.int(n)}</span>}
@@ -117,7 +142,8 @@ export function Sidebar({ viewer, counts, orgName }: {
       </nav>
 
       <div className="side-foot">
-        <button className="userchip" data-act="me.switch">
+        <button className="userchip" data-act="me.switch"
+          data-tip={`${viewer.name} · ${viewer.roleLabel}`}>
           <Avatar person={{ name: viewer.name, photo: viewer.photo, hue: viewer.hue }} size="m" />
           <span className="meta"><b>{viewer.name}</b><span>{viewer.roleLabel}</span></span>
           <span className="chev"><Icon name="chevU" size={14} /></span>

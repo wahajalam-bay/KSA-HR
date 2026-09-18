@@ -23,89 +23,24 @@ import type {
 
 /* ── Branding ────────────────────────────────────────────────────────────── */
 
-export function BrandingPanel({ org, theme }: { org: Org; theme: 'system' | 'light' | 'dark' }) {
+/* The theme control. It used to live on a Branding tab that was a
+   design-system reference — swatches of the token ramp — rather than
+   anything anybody administers. The tab is gone; the one control on it
+   that people actually use is here. */
+export function AppearanceCard({ theme }: { theme: 'system' | 'light' | 'dark' }) {
   return (
-    <>
-      <div style={{ marginBottom: 14 }}>
-        <Banner tone="info" icon="spark"
-          title="Every colour in the product comes from one :root block in the stylesheet"
-          body={
-            <>
-              There is no colour hard-coded in a component, a chart or an icon. Change{' '}
-              <b>--brand-500</b>, <b>--brand-600</b> and <b>--brand-tint</b> in that block and
-              every screen re-themes at once — navigation, buttons, pipeline pills, KPI tiles,
-              charts and the focus ring. The dark theme redefines the same names, so it follows
-              too.
-            </>
-          } />
-      </div>
-
-      <div className="grid g-2">
-        <Card title="Brand ramp"
-          sub="The Bayut green, from the pressed state through to the soft fills used for selected rows. --brand-500 is the primary.">
-          <Swatches names={['--brand-700', '--brand-600', '--brand-500', '--brand-400', '--brand-300', '--brand-tint', '--brand-tint-2']} />
-        </Card>
-
-        <Card title="Gold accent"
-          sub="Reserved for premium and verified marks, so it keeps its meaning. It is never used for magnitude in a chart.">
-          <Swatches names={['--gold', '--gold-tint']} />
-        </Card>
-
-        <Card title="Categorical chart colours"
-          sub={'Four, and only four. A fifth category is folded into "Other" rather than given a '
-            + 'colour, because separation stops being reliable past four.'}>
-          <Swatches names={['--cat-1', '--cat-2', '--cat-3', '--cat-4']} />
-          <div style={{ marginTop: 12 }}>
-            <Legend items={CAT.map((c, i) => ({ color: c, label: `Series ${i + 1}` }))} />
-          </div>
-        </Card>
-
-        <Card title="Sequential chart colours"
-          sub={'One hue in four steps, for magnitude across a single category — time in stage, '
-            + 'load per person, a heat grid.'}>
-          <Swatches names={['--seq-1', '--seq-2', '--seq-3', '--seq-4']} />
-          <div style={{ marginTop: 12 }}>
-            <Legend items={SEQ.map((c, i) => ({ color: c, label: `Step ${i + 1}` }))} />
-          </div>
-        </Card>
-
-        <Card title="Appearance"
-          sub="System follows the device. Light and dark pin it, and the choice is remembered against your profile.">
-          <Seg action="theme.set" active={theme}
-            options={[{ v: 'system', t: 'System' }, { v: 'light', t: 'Light' }, { v: 'dark', t: 'Dark' }]} />
-          <p className="t-sub" style={{ marginTop: 11 }}>
-            Currently showing the <b>{theme}</b> palette. Both themes define the same
-            custom-property names, so a rebrand only has to be done once.
-          </p>
-        </Card>
-
-        <Card title="Organisation" sub="Read from the organisation record.">
-          <Kvs pairs={[
-            ['Organisation', org.orgName],
-            ['Legal entity', org.legalName],
-            ['Country', org.country],
-            ['Time zone', org.timezone],
-            ['Weekend', fmt.list((org.weekendDays ?? []).map((d) => DAY_NAMES[d] ?? String(d)))],
-            ['Currency', org.currency],
-            ['Fiscal year starts', org.fiscalYearStart],
-            ['Locales', `${org.locale} · ${org.secondLocale}`],
-            ['Data retention', `${org.dataRetentionMonths} months`],
-            ['Offer approval above', `${fmt.sar(org.offerApprovalThreshold)} / month`],
-            ['Offers signed by', org.signedBy ?? '—'],
-            ['ATS owner', org.atsOwner ?? '—'],
-            ['HRIS of record', org.hrisName ?? '—'],
-          ]} />
-        </Card>
-      </div>
-    </>
+    <Card title="Appearance"
+        sub="System follows the device. Light and dark pin it, and the choice is remembered against your profile.">
+        <Seg action="theme.set" active={theme}
+          options={[{ v: 'system', t: 'System' }, { v: 'light', t: 'Light' }, { v: 'dark', t: 'Dark' }]} />
+        <p className="t-sub" style={{ marginTop: 11 }}>
+          Currently showing the <b>{theme}</b> palette. Both themes define the same
+          custom-property names, so a rebrand only has to be done once.
+        </p>
+      </Card>
   );
 }
 
-const DAY_NAMES: Record<number, string> = {
-  0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday',
-};
-
-/* ── Organisation ────────────────────────────────────────────────────────── */
 export function OrganisationPanel({ d, mayEdit }: { d: OrgPanel; mayEdit: boolean }) {
   const groups = [
     ...d.functions.map((f) => ({ f, rows: d.departments.filter((x) => x.functionId === f.id) })),

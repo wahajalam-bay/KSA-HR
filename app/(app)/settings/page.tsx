@@ -4,7 +4,7 @@ import { TopBar } from '@/components/app/shell';
 import { Subnav, Empty } from '@/components/ui/primitives';
 import { NoAccess } from '@/components/app/no-access';
 import {
-  BrandingPanel, OrganisationPanel, PipelinesPanel, AutomationsPanel, IntegrationsPanel,
+  AppearanceCard, OrganisationPanel, PipelinesPanel, AutomationsPanel, IntegrationsPanel,
   AuditPanel, DataPanel,
 } from '@/components/settings/panels';
 import {
@@ -31,7 +31,7 @@ export default async function SettingsPage({ searchParams }: {
     );
   }
 
-  const tab = (S.SETTINGS_TABS.some((t) => t.v === sp.tab) ? sp.tab : 'branding') as S.SettingsTab;
+  const tab = (S.SETTINGS_TABS.some((t) => t.v === sp.tab) ? sp.tab : 'org') as S.SettingsTab;
   const mayEdit = can(viewer, 'settings.edit');
   const mayManageAccess = can(viewer, 'access.manage');
   const mayManageAutomations = can(viewer, 'automation.manage');
@@ -44,7 +44,15 @@ export default async function SettingsPage({ searchParams }: {
      visit would make the page slower than the thing it configures. */
   const panel = await (async () => {
     switch (tab) {
-      case 'org': return <OrganisationPanel d={await S.orgPanel()} mayEdit={mayEdit} />;
+      case 'org': return (
+        <>
+          <OrganisationPanel d={await S.orgPanel()} mayEdit={mayEdit} />
+          {/* The theme control, which used to sit on a Branding tab that was a
+              reference sheet for the token ramp rather than anything anybody
+              administers. */}
+          <div style={{ marginTop: 14 }}><AppearanceCard theme={theme} /></div>
+        </>
+      );
       case 'approvals': return <ApprovalsPanel d={await S.approvalsPanel()} mayEdit={mayEdit} now={now} />;
       case 'access':
         if (!can(viewer, 'access.manage') && !can(viewer, 'settings.view')) return null;
@@ -71,7 +79,7 @@ export default async function SettingsPage({ searchParams }: {
         );
       }
       case 'data': return <DataPanel d={await S.dataPanel()} />;
-      default: return <BrandingPanel org={org} theme={theme} />;
+      default: return null;
     }
   })();
 

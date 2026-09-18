@@ -335,3 +335,122 @@ label.chip{cursor:pointer;user-select:none}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
   clip-path:inset(50%);white-space:nowrap;border:0}
 .dz{position:relative}
+
+/* ── The Bayut brand ────────────────────────────────────────
+   The artwork is never stretched, tinted or filtered. `contain` and a width
+   that follows the file's own ratio are the whole treatment; the only thing
+   the interface decides is which of the two colourways suits the ground.
+   components/ui/brand.tsx renders both and this shows one. */
+.brand-art{
+  display:block;
+  /* No width/height here. A bare <img> keeps the size its own attributes give
+     it — which the component computes from the artwork's ratio — and a
+     blanket `100%` made it fall back to the file's intrinsic 161x127 and
+     spill out of its chip. The wrapper below sets its own. */
+  object-fit:contain;
+  object-position:left center;
+  /* The artwork is the brand; nothing here may adjust it. */
+  filter:none;
+  -webkit-user-drag:none;
+}
+.brand{ position:relative; display:inline-block; flex:0 0 auto }
+.brand .brand-art{ position:absolute; inset:0; width:100%; height:100% }
+.brand .on-dark{ opacity:0 }
+/* Dark, either because the system says so and nothing has overridden it, or
+   because the theme control has. Both paths, the same rule. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .brand .on-light{ opacity:0 }
+  :root:not([data-theme="light"]) .brand .on-dark{ opacity:1 }
+}
+:root[data-theme="dark"] .brand .on-light{ opacity:0 }
+:root[data-theme="dark"] .brand .on-dark{ opacity:1 }
+
+/* The sidebar brand block.
+
+   The lockup sits above the descriptor rather than beside it: the rail is
+   narrow, the lockup is wide, and side by side the descriptor was clipped
+   mid-word and ran into the first card of the page. Stacked, both get their
+   full width and the block keeps a fixed height, so nothing below it moves.
+
+   `min-width:0` on the column is what actually lets the descriptor shrink —
+   a flex child defaults to `min-width:auto` and refuses to go below its
+   content, which is what pushed it under the card in the first place. */
+.side-brand{ align-items:center; gap:11px; padding-block:18px 16px }
+.side-brand .nm{ display:flex; flex-direction:column; gap:3px; min-width:0; flex:1 1 auto }
+.side-brand .nm .brand{ flex:0 0 auto }
+.side-brand .nm>span{
+  display:block; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+/* Collapsed to icon width: the chip alone, centred, and the column gone. */
+.side-brand .logo{ display:none }
+@media (max-width:1100px){
+  .side-brand{ justify-content:center }
+  .side-brand .nm{ display:none }
+  .side-brand .logo{ display:grid }
+}
+/* The chip is brand green in both themes, so the mark on it is the white
+   artwork in both. The component sets the pixel height and the width follows
+   the artwork's own ratio; nothing here resizes it, because a percentage
+   inside a grid item resolved against the wrong box and the mark spilled out
+   of its chip. */
+.side-brand .logo .brand-art{ object-position:center }
+
+/* The sign-in card: the lockup above the descriptor, not beside it — the
+   lockup already says the name. */
+.login-brand.stack{ flex-direction:column; align-items:flex-start; gap:8px }
+.login-brand.stack .nm span{ letter-spacing:.14em }
+
+/* The boot screen, and the pages that stand in for the shell. */
+/* The overview's brand chip: the real mark and lockup in place of the glyph
+   and the typed word that stood in for them. */
+.hero-brand .brand-chip{ margin-right:2px }
+.hero-brand .brand-art{ object-position:center }
+
+/* ── The Bayut loader ───────────────────────────────────────
+   A muted track, one green arc going round it, the mark still at the centre.
+   The whole animation is a rotate on the SVG, so it composites and never
+   touches layout or paint. */
+.bloader{
+  position:relative; display:inline-grid; place-items:center;
+  flex:0 0 auto;
+}
+.bloader-ring{
+  position:absolute; inset:0; width:100%; height:100%;
+  transform-origin:50% 50%;
+  animation:bloader-spin 1.15s linear infinite;
+}
+.bloader-ring circle{ fill:none }
+.bloader-ring .track{ stroke:var(--brand-tint, rgba(13,122,63,.14)) }
+.bloader-ring .sweep{ stroke:var(--brand-500) }
+/* The mark sits above the ring and does not turn with it. */
+.bloader-mark{ position:relative; z-index:1 }
+
+@keyframes bloader-spin{ to{ transform:rotate(360deg) } }
+/* Without motion the ring stops and breathes, so the state still reads. */
+@keyframes bloader-breathe{ 0%,100%{ opacity:.35 } 50%{ opacity:1 } }
+@media (prefers-reduced-motion:reduce){
+  .bloader-ring{ animation:none }
+  .bloader-ring .sweep{ animation:bloader-breathe 1.8s ease-in-out infinite }
+}
+
+/* A whole panel or page waiting. */
+.bloader-panel{
+  display:grid; place-items:center; gap:14px;
+  padding:56px 24px; text-align:center; min-height:220px;
+}
+.bloader-panel .t-sub{ max-width:36ch; margin:0 }
+
+/* The boot screen. It is rendered into the shell's view slot, which is
+   already the height of the window less the header — so it fills its parent
+   rather than claiming a viewport of its own, which is what stranded the
+   loader near the top with everything else far below it. */
+.boot{
+  display:grid; place-items:center; gap:16px;
+  min-height:100%; height:100%; padding:24px; text-align:center;
+}
+/* Standing on its own — not-found, the error page — there is no shell around
+   it, so there it does take the window. */
+body>.boot,
+main.boot:not(.view){ min-height:100dvh }
+.boot .t-sub{ max-width:34ch; margin:0 }
