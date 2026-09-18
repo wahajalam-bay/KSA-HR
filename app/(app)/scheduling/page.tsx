@@ -8,6 +8,7 @@ import { InterviewersTab } from '@/components/scheduling/interviewers';
 import { LoadTab } from '@/components/scheduling/load';
 import * as W from '@/lib/domain/window';
 import { can } from '@/lib/authz';
+import { DrillChips, interviewChips } from '@/components/charts/chips';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +24,10 @@ export default async function SchedulingPage({ searchParams }: {
      three and then shows nothing cannot happen. */
   const iw = W.preset(Number(sp.iw) || 90);
   const [ag, tasks, pendingReviews] = await Promise.all([
-    agenda(viewer, { range: sp.range, owner: sp.owner, mode: sp.mode }, now),
+    agenda(viewer, {
+      range: sp.range, owner: sp.owner, mode: sp.mode,
+      after: sp.after, fromAt: sp.fromAt, toAt: sp.toAt, panel: sp.panel,
+    }, now),
     taskBoard(viewer, sp.who && tab === 'tasks' ? sp.who : undefined),
     pendingReviewCount(viewer, now),
   ]);
@@ -58,6 +62,10 @@ export default async function SchedulingPage({ searchParams }: {
           { v: 'interviewers', t: 'Interviewers', n: pendingReviews },
           { v: 'load', t: 'Load' },
         ]} />
+
+        {/* A span given in instants has no control on the page showing it, so
+            without this the agenda would hold a window nobody can see. */}
+        <DrillChips sp={sp} path="/scheduling" chips={interviewChips(sp)} />
 
         {tab === 'tasks' ? (
           <TasksTab kept={tasks.kept} owners={tasks.owners} who={sp.who ?? ''} today={today} now={now} />

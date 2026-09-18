@@ -2,7 +2,8 @@ import * as React from 'react';
 import {
   Card, Kpi, Chip, Empty, Banner, Avatar, Table, Li, Btn, type Column,
 } from '@/components/ui/primitives';
-import { Pie, Legend, Bars, HBars } from '@/components/charts';
+import { Pie, Legend, Bars, HBars, type Picks } from '@/components/charts';
+import { interviewsUrl, applicationsUrl } from '@/lib/charts/drill';
 import { RAMP } from '@/lib/charts/palette';
 import { fmt } from '@/lib/format';
 import { NEXT_D, BACK_D, CAP, dayKey, dowOf, DOWS, isWeekend } from '@/lib/queries/scheduling';
@@ -39,6 +40,111 @@ export function LoadTab({ data, now }: { data: Data; now: Date }) {
   const tot = use.reduce((n, x) => n + x.value, 0) || 1;
 
   const weekendAhead = data.ahead.filter((i) => isWeekend(dayKey(i.at)));
+
+  /* ── Where each of these charts lands ─────────────────────────────────────
+     The ring and the per-interviewer bars count the same span the tab itself
+     works in: everything held in the last ${BACK_D} days and everything booked
+     into the next ${NEXT_D}. The agenda is given that span in instants, because
+     that is how this data was counted — a day-wide filter would take in
+     interviews from earlier today that the "held" window excludes. */
+  const spanFrom = new Date(now.getTime() - BACK_D * 86_400_000).toISOString();
+  const spanTo = new Date(now.getTime() + NEXT_D * 86_400_000).toISOString();
+
+  const modePicks: Picks = use.map((x, i) => {
+    const other = rest && i === use.length - 1;
+    const names = other
+      ? segsAll.slice(4).map((s) => s.label)
+      : [x.label];
+    return other
+      ? {
+        /* "Other" is several formats at once, and the agenda filters one at a
+           time — so it explains itself rather than half-answering. */
+        tip: {
+          label: 'Other formats',
+          value: fmt.int(x.value),
+          rows: [
+            ['Share of the window', fmt.pct(x.value / tot)],
+            ['Formats', fmt.list(names)],
+          ],
+        },
+      }
+      : {
+        act: 'go',
+        v: interviewsUrl({ fromAt: spanFrom, toAt: spanTo, mode: x.label }),
+        tip: {
+          label: x.label,
+          value: `${fmt.int(x.value)} interview${x.value === 1 ? '' : 's'}`,
+          rows: [['Share of the window', fmt.pct(x.value / tot)]],
+          action: `Open ${fmt.int(x.value)} interview${x.value === 1 ? '' : 's'}`,
+        },
+      };
+  });
+
+  /* A week bar counts (start, end] — the exclusive lower bound matters, or a
+     drill takes in the interview that belongs to the week before. */
+  const weekPicks: Picks = data.weeks.map((wk) => (wk.value
+    ? {
+      act: 'go',
+      v: interviewsUrl({ after: wk.start, toAt: wk.end }),
+      tip: {
+        label: `Week to ${wk.label}`,
+        value: `${fmt.int(wk.value)} interview${wk.value === 1 ? '' : 's'}`,
+        ...(wk.ahead ? { note: 'These are bookings, not history.' } : {}),
+        action: `Open ${fmt.int(wk.value)} interview${wk.value === 1 ? '' : 's'}`,
+      },
+    }
+    : { tip: { label: `Week to ${wk.label}`, value: 'none' } }));
+
+  /* Somebody with nothing held but something booked still belongs on this
+     chart — their bar is zero and there is nothing behind it to open. */
+  const ivPicks: Picks = interviewers.map((r) => ({
+    ...(r.held ? {
+      act: 'go',
+      /* The bar is what they HELD, so the span stops at now rather than at the
+         far edge of the booking window. */
+      v: interviewsUrl({ fromAt: spanFrom, toAt: now.toISOString(), panel: r.name }),
+    } : {}),
+    tip: {
+      label: r.name,
+      value: `${fmt.int(r.held)} held`,
+      rows: [
+        ['Booked ahead', fmt.int(r.ahead)],
+        ...(r.roleLabel ? [[r.roleLabel, 'on the desk'] as [string, string]] : []),
+      ],
+      ...(r.ahead > CAP.ahead ? { note: 'Over the booking threshold for the next fortnight.' } : {}),
+      ...(r.held ? { action: `Open ${fmt.int(r.held)} interview${r.held === 1 ? '' : 's'}` } : {}),
+    },
+  }));
+
+  /* A person's own interview record, not a list — so it says `record` and the
+     reconciliation suite knows there is nothing here to add up. */
+  const waitPicks: Picks = waiters.map((r) => ({
+    act: 'go',
+    v: `/scheduling?tab=interviewers&who=${encodeURIComponent(r.name)}`,
+    opens: 'record',
+    tip: {
+      label: r.name,
+      value: `${fmt.int(r.waiting)} outstanding`,
+      rows: r.waitedMax ? [['Oldest has waited', `${Math.round(r.waitedMax)} days`]] : undefined,
+      ...(r.waitedMax > CAP.waiting
+        ? { note: `Past the ${CAP.waiting}-day threshold.` } : {}),
+      action: `Open ${r.name}'s interview record`,
+    },
+  }));
+
+  const carryPicks: Picks = carriers.map((r) => ({
+    ...(r.live ? { act: 'go', v: applicationsUrl({ tab: 'pipeline', ownerId: r.staffId! }) } : {}),
+    tip: {
+      label: r.name,
+      value: `${fmt.int(r.live)} live application${r.live === 1 ? '' : 's'}`,
+      rows: [
+        ['Past their stage SLA', fmt.int(r.overSla)],
+        ['Open requisitions', fmt.int(r.reqs)],
+      ],
+      ...(r.live > CAP.live ? { note: `Above the ${CAP.live}-application threshold.` } : {}),
+      ...(r.live ? { action: `Open ${fmt.int(r.live)} live application${r.live === 1 ? '' : 's'}` } : {}),
+    },
+  }));
 
   const cols: Array<Column<Row>> = [
     {
@@ -109,8 +215,8 @@ export function LoadTab({ data, now }: { data: Data; now: Date }) {
           sub={`Every interview held in the last ${BACK_D} days or booked into the next ${NEXT_D}, by how it runs.`}>
           {use.length ? (
             <div className="pie-row">
-              <Pie segments={use} size={200} />
-              <Legend items={use.map((x, i) => ({
+              <Pie segments={use} size={200} picks={modePicks} />
+              <Legend picks={modePicks} items={use.map((x, i) => ({
                 color: RAMP[i % RAMP.length], label: x.label,
                 value: `${fmt.int(x.value)} · ${fmt.pct(x.value / tot)}`,
               }))} />
@@ -121,7 +227,7 @@ export function LoadTab({ data, now }: { data: Data; now: Date }) {
         <Card title="Interviews a week"
           sub={`Held per week over the last ${BACK_D} days, then what is booked ahead.`}
           foot={<span className="t-foot">The last two bars are bookings, not history.</span>}>
-          <Bars data={data.weeks} h={220} labelMax={6} />
+          <Bars data={data.weeks} h={220} labelMax={6} picks={weekPicks} />
         </Card>
       </div>
 
@@ -129,7 +235,7 @@ export function LoadTab({ data, now }: { data: Data; now: Date }) {
         <Card title="Interview load per interviewer"
           sub={`Interviews held in the last ${BACK_D} days. The note is what is already booked into the next ${NEXT_D}.`}>
           {interviewers.length ? (
-            <HBars data={interviewers.map((r) => ({
+            <HBars picks={ivPicks} data={interviewers.map((r) => ({
               label: r.name, value: r.held,
               note: r.ahead ? `+${r.ahead} ahead` : 'none ahead',
               color: r.ahead > CAP.ahead ? 'var(--warn)' : 'var(--seq-3)',
@@ -141,7 +247,7 @@ export function LoadTab({ data, now }: { data: Data; now: Date }) {
           sub={'Unsubmitted evaluations. The note is how long the oldest one has been waiting, counted '
             + 'from the interview it belongs to.'}>
           {waiters.length ? (
-            <HBars data={waiters.map((r) => ({
+            <HBars picks={waitPicks} data={waiters.map((r) => ({
               label: r.name, value: r.waiting,
               note: r.waitedMax ? `oldest ${Math.round(r.waitedMax)} d` : '',
               color: r.waitedMax > CAP.waiting ? 'var(--bad)' : 'var(--seq-3)',
@@ -153,7 +259,7 @@ export function LoadTab({ data, now }: { data: Data; now: Date }) {
           sub={'Active and on-hold applications owned by each recruiter. The note is how many of them '
             + 'are past their stage SLA.'}>
           {carriers.length ? (
-            <HBars data={carriers.map((r) => ({
+            <HBars picks={carryPicks} data={carriers.map((r) => ({
               label: r.name, value: r.live,
               note: r.overSla ? `${r.overSla} past SLA` : 'all inside SLA',
               color: r.live > CAP.live ? 'var(--warn)' : 'var(--seq-3)',

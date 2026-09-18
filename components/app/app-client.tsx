@@ -6,6 +6,7 @@ import { dispatch, dispatchUpload, type DispatchResult } from '@/app/actions/dis
 import { renderSheet, type SheetPayload } from '@/app/actions/sheets';
 import { NAV_ACTIONS, LOCAL_ACTIONS, SHEET_ACTIONS, classify, splitAction, parseRoute, type Route } from '@/lib/nav';
 import { Icon, type IconName } from '@/components/ui/icons';
+import { ChartTooltip } from '@/components/charts/tooltip';
 
 /* ═════════════════════════════════════════════════════════════════════════════
    THE INTERACTION LAYER
@@ -273,6 +274,18 @@ export function AppClient({ children, isPortal }: { children: React.ReactNode; i
         fire(el.dataset.act!, el.dataset.v ?? '', el);
         return;
       }
+      /* A focusable thing carrying an action is a button, whatever element it
+         happens to be — an SVG group in a chart, most of the time. A real
+         <button> gets Enter and Space from the browser; these have to be given
+         them, or every chart is mouse-only. */
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        const el = document.activeElement as HTMLElement | null;
+        if (el && el.dataset?.act && !/^(BUTTON|A|INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) {
+          ev.preventDefault();
+          fireRef.current(el.dataset.act, el.dataset.v ?? '', el);
+          return;
+        }
+      }
       if (ev.key === 'Escape') {
         if (paletteOpen) setPaletteOpen(false);
         else if (confirmer) { confirmer.resolve(false); setConfirmer(null); }
@@ -311,6 +324,9 @@ export function AppClient({ children, isPortal }: { children: React.ReactNode; i
   }, [fire, closeSheet, confirmer, isPortal, paletteOpen, router]);
 
   const gPressed = React.useRef(false);
+  /* The key handler is installed before `fire` is defined, and re-installing
+     it on every render would drop keystrokes; a ref keeps it current. */
+  const fireRef = React.useRef<(act: string, v?: string, el?: HTMLElement | null) => void>(() => {});
 
   /* ── uploads and drag-and-drop ──────────────────────────────────────────── */
   const upload = React.useCallback(async (spec: string, files: File[]) => {
@@ -422,6 +438,8 @@ export function AppClient({ children, isPortal }: { children: React.ReactNode; i
 
   /* The tab strips that overflow show their arrows. */
 
+  fireRef.current = fire;
+
   const ctx: Ctx = React.useMemo(
     () => ({ fire, toast, closeSheet, confirm, pending }),
     [fire, toast, closeSheet, confirm, pending],
@@ -431,6 +449,9 @@ export function AppClient({ children, isPortal }: { children: React.ReactNode; i
     <ActionCtx.Provider value={ctx}>
       {children}
       <SheetStack sheets={sheets} />
+      {/* One tooltip serves every chart; a mark carries `data-tip` and this
+          draws it. See components/charts/tooltip.tsx. */}
+      <ChartTooltip />
       {confirmer && <ConfirmSheet c={confirmer} />}
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} fire={fire} />}
       <div className="toasts" id="toasts" role="status" aria-live="polite">

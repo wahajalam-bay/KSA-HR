@@ -4,6 +4,7 @@ import { activityFeed } from '@/lib/queries/job-tabs';
 import { TopBar } from '@/components/app/shell';
 import { Seg, Push } from '@/components/ui/primitives';
 import { fmt } from '@/lib/format';
+import { can } from '@/lib/authz';
 import * as W from '@/lib/domain/window';
 import { PeriodRange } from '@/components/overview/period';
 import { Hero, PipelineDonut } from '@/components/overview/hero';
@@ -97,7 +98,7 @@ export default async function OverviewPage({ searchParams }: {
           </div>
 
           <div className="g-board">
-            <TeamComposition data={data} />
+            <TeamComposition data={data} canOpen={can(viewer, 'team.view')} />
             <KeyMetrics data={data} />
             <SourcesDonut data={data} />
           </div>

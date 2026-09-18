@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Card, Stepper } from '@/components/ui/primitives';
 import { Badge, Icon } from '@/components/ui/icons';
 import { BrandLogo } from '@/components/ui/brand';
-import { Line, Donut, Legend } from '@/components/charts';
+import { Line, Donut, Legend, type Picks } from '@/components/charts';
+import { applicationsUrl } from '@/lib/charts/drill';
 import { fmt } from '@/lib/format';
 import * as W from '@/lib/domain/window';
 import type { OverviewData } from '@/lib/queries/overview';
@@ -101,6 +102,36 @@ export function PipelineDonut({ data }: { data: OverviewData }) {
   const liveNow = data.inPlay.live;
   const total = rows.length || 1;
 
+  /* Each slice stands for the applications that had reached that group of
+     stages by the end of the period. Picking one lands on exactly those — the
+     same window, the same reading of "reached by then", the same stage keys —
+     so the count on the chart and the count on the list are one number read
+     twice, not two numbers that ought to agree. */
+  const allPicks: Picks = segs.map((s) => {
+    const keys = GROUPS.find(([label]) => label === s.label)![1];
+    if (!s.value) return { tip: { label: s.label, value: '0', note: 'Nobody reached this group.' } };
+    return {
+      act: 'go',
+      v: applicationsUrl({
+        tab: 'all', apps: true, win: 'inplay',
+        from: data.from, to: data.to, stages: keys,
+      }),
+      tip: {
+        label: s.label,
+        value: fmt.int(s.value),
+        rows: [
+          ['Share of the period', fmt.pct(s.value / total)],
+          ...(s.live ? [['Still live today', fmt.int(s.live)] as [string, string]] : []),
+        ],
+        action: `Open ${fmt.int(s.value)} application${s.value === 1 ? '' : 's'}`,
+      },
+    };
+  });
+  /* The chart is drawn from the groups that have somebody in them; the legend
+     and the stepper show all five. Both read from the same array. */
+  const shown = segs.filter((s) => s.value);
+  const picks: Picks = shown.map((s) => allPicks![segs.indexOf(s)]);
+
   return (
     <Card
       title="Candidate pipeline" icon="users"
@@ -116,16 +147,18 @@ export function PipelineDonut({ data }: { data: OverviewData }) {
       }
     >
       <div className="donut-row">
-        <Donut segments={segs.filter((s) => s.value)} size={190}
+        <Donut segments={shown} size={190} picks={picks}
           centre={fmt.int(rows.length)} centreSub="in the period" />
-        <Legend items={segs.map((s) => ({
-          color: s.color, label: s.label, value: fmt.int(s.value),
-          sub: s.value
-            ? `${fmt.pct(s.value / total)} of the period${s.live ? ` · ${fmt.int(s.live)} still live` : ''}`
-            : '',
-        }))} />
+        <Legend
+          items={segs.map((s) => ({
+            color: s.color, label: s.label, value: fmt.int(s.value),
+            sub: s.value
+              ? `${fmt.pct(s.value / total)} of the period${s.live ? ` · ${fmt.int(s.live)} still live` : ''}`
+              : '',
+          }))}
+          picks={allPicks} />
       </div>
-      <Stepper stages={steps} counts={counts} />
+      <Stepper stages={steps} counts={counts} picks={allPicks ?? []} />
     </Card>
   );
 }

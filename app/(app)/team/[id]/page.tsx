@@ -119,7 +119,7 @@ export default async function TeamProfilePage({ params, searchParams }: {
 
         <div className="grid g-3" style={{ marginBottom: 14 }}>
           <PipelinePie d={d} />
-          <FunnelCard d={d} win={w} />
+          <FunnelCard d={d} win={w} now={now} />
           <TatCard d={d} />
         </div>
 

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { markProps, type Pick, type MarkProps } from '@/lib/charts/interaction';
 import { Icon, Badge, guessIcon, type IconName } from './icons';
 import { Portrait, type PortraitPerson } from './portrait';
 import { fmt, clamp, cls } from '@/lib/format';
@@ -172,9 +173,21 @@ export function Rate({ value, action, v }: { value: number; action: string; v?: 
   );
 }
 
+/* A proportion drawn as a rail or a ring.
+
+   Both are data — a share of a target, a rate, a breach rate — so both get the
+   product's own tooltip rather than the browser's, the same one every chart
+   uses. `title` stays as the way a caller says what the figure means; it is now
+   the tooltip's text instead of a `title` attribute, so it reads in the
+   product's voice, appears on keyboard focus as well as on hover, and does not
+   wait a second and a half to show up. */
+function proportionProps(p: number, title: string | undefined, base: string): MarkProps {
+  return markProps({ tip: { label: title ?? 'Share', value: fmt.pct(p) } }, base);
+}
+
 export function Bar({ p, thin, tone, title, color }: { p: number; thin?: boolean; tone?: Tone; title?: string; color?: string }) {
   return (
-    <span className={cls('bar', thin && 'thin')} title={title ?? fmt.pct(p)}>
+    <span {...proportionProps(p, title, cls('bar', thin && 'thin') ?? 'bar')}>
       <i className={tone ?? ''} style={{ width: `${clamp(p * 100, 0, 100).toFixed(1)}%`, ...(color ? { background: color } : {}) }} />
     </span>
   );
@@ -184,7 +197,7 @@ export function Ring({ p, label, title, color }: { p: number; label?: React.Reac
   const style: React.CSSProperties = { ['--p' as any]: clamp((p || 0) * 100, 0, 100).toFixed(0) };
   if (color) style.background = `conic-gradient(${color} calc(var(--p)*1%),var(--surface-3) 0)`;
   return (
-    <span className="ring" style={style} title={title ?? fmt.pct(p)}>
+    <span style={style} {...proportionProps(p, title, 'ring')}>
       <span>{label ?? fmt.pct(p)}</span>
     </span>
   );
@@ -530,9 +543,12 @@ const STEP_ICON: Record<string, IconName> = {
   applied: 'inbox', sourced: 'search', screen: 'phone', assessment: 'file',
   iv1: 'users', iv2: 'users', pitch: 'target', ivf: 'badge', offer: 'mail', joined: 'check',
 };
-export function Stepper({ stages, current, counts, action, className }: {
+export function Stepper({ stages, current, counts, action, className, picks }: {
   stages: Array<{ key: string; name: string }>; current?: string | null;
   counts?: Record<string, number>; action?: string; className?: string;
+  /* One per step. A stepper drawn beside a chart is another view of the same
+     marks, so it takes the same picks and lands in the same place. */
+  picks?: Array<Pick | null>;
 }) {
   const cur = current ? stages.findIndex((s) => s.key === current) : -1;
   return (
@@ -540,8 +556,12 @@ export function Stepper({ stages, current, counts, action, className }: {
       {stages.map((s, i) => {
         const state = cur < 0 ? 'on' : i < cur ? 'done' : i === cur ? 'now' : 'todo';
         const n = counts ? counts[s.key] : null;
+        const pick = picks?.[i] ?? null;
+        const m = pick
+          ? markProps(pick, `step ${state}`)
+          : { className: `step ${state}`, ...(action ? { 'data-act': action, 'data-v': s.key } : {}) };
         return (
-          <div key={s.key} className={`step ${state}`} {...(action ? { 'data-act': action, 'data-v': s.key } : {})}>
+          <div key={s.key} {...m}>
             {i > 0 && <i className="ln" />}
             <span className="nd"><Icon name={STEP_ICON[s.key] ?? 'chev'} size={14} sw={2} /></span>
             <b>{s.name}</b>

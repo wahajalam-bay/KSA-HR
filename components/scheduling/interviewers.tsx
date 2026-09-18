@@ -3,7 +3,7 @@ import {
   Card, Kpi, Seg, Chip, Empty, Banner, Avatar, Table, Bar, Kvs, Btn, Push, StagePill,
   type Column,
 } from '@/components/ui/primitives';
-import { Donut, Legend } from '@/components/charts';
+import { Donut, Legend, type Picks } from '@/components/charts';
 import { fmt } from '@/lib/format';
 import * as W from '@/lib/domain/window';
 import { CRIT, CRIT_LABEL, MIN_N, BANDS, band, bandText } from '@/lib/domain/ivreview';
@@ -168,12 +168,33 @@ export function InterviewersTab({ data, w, sel, now }: {
 
         <Card title="How the scores sit" icon="chart"
           foot={<span className="t-foot">{fmt.int(scores.length)} reviews in {phrase}.</span>}>
-          <Donut size={170} centre={median == null ? '—' : String(median)} centreSub="median"
-            segments={BANDS.map(([label, f, color]) => ({ label, color, value: scores.filter(f).length }))
-              .filter((x) => x.value)} />
-          <Legend items={BANDS.map(([label, f, color]) => ({
-            color, label, value: fmt.int(scores.filter(f).length),
-          }))} />
+          {(() => {
+            /* A band of review scores is not a set the product has a list for —
+               there is no page of "interviews that scored 60 to 79". So these
+               marks explain themselves and stay out of the tab order rather
+               than pretending to lead somewhere. */
+            const all = BANDS.map(([label, f, color]) => ({
+              label, color, value: scores.filter(f).length,
+            }));
+            const totalScored = scores.length || 1;
+            const tips: Picks = all.map((x) => ({
+              tip: {
+                label: x.label,
+                value: `${fmt.int(x.value)} review${x.value === 1 ? '' : 's'}`,
+                rows: [['Share of the reviews', fmt.pct(x.value / totalScored)]],
+              },
+            }));
+            const shown = all.filter((x) => x.value);
+            return (
+              <>
+                <Donut size={170} centre={median == null ? '—' : String(median)} centreSub="median"
+                  segments={shown} picks={shown.map((x) => tips![all.indexOf(x)])} />
+                <Legend items={all.map((x) => ({
+                  color: x.color, label: x.label, value: fmt.int(x.value),
+                }))} picks={tips} />
+              </>
+            );
+          })()}
         </Card>
       </div>
 

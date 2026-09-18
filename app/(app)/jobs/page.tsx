@@ -9,7 +9,8 @@ import {
   Push, type Column,
 } from '@/components/ui/primitives';
 import { Icon } from '@/components/ui/icons';
-import { Stack } from '@/components/charts';
+import { Stack, type Picks } from '@/components/charts';
+import { applicationsUrl } from '@/lib/charts/drill';
 import { fmt, daysAgo, ago, dateWindowLabel } from '@/lib/format';
 import { routeMeta } from '@/lib/domain/sourcing';
 import { can } from '@/lib/authz';
@@ -17,6 +18,7 @@ import { ApplicationSearchBar } from '@/components/jobs/search-bar';
 import { ApprovalQueue } from '@/components/approvals/queue';
 import { requisitionQueue } from '@/lib/queries/approvals';
 import { SourceMark } from '@/components/jobs/source-mark';
+import { DrillChips, jobChips } from '@/components/charts/chips';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +75,11 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
             <ApprovalQueue rows={queue} viewer={viewer} now={now} />
           </div>
         )}
+
+        <DrillChips sp={sp} path="/jobs" chips={jobChips(sp, {
+          dept: (id) => depts.find((x) => x.id === id)?.name ?? id,
+          owner: (id) => recruiters.find((x) => x.id === id)?.name ?? id,
+        })} />
 
         <div className="filters">
           <ApplicationSearchBar q={sp.q ?? ''} from={sp.from ?? ''} to={sp.to ?? ''} />
@@ -156,9 +163,25 @@ function JobRow({ j, now }: { j: Awaited<ReturnType<typeof listJobs>>['rows'][nu
           <Avatar person={{ name: j.recruiterName ?? '', photo: j.recruiterPhoto, hue: j.recruiterHue }} size="s" />
         </div>
         {j.distribution.length ? (
-          <Stack segments={j.distribution.map((d) => ({
-            label: d.name, value: d.n, color: `var(--stg-${d.band})`,
-          }))} />
+          <Stack
+            segments={j.distribution.map((d) => ({
+              label: d.name, value: d.n, color: `var(--stg-${d.band})`,
+            }))}
+            /* A segment of the rail is the live applications standing in that
+               stage on this requisition. It sits inside a card that is itself a
+               link, and the dispatcher takes the innermost action, so picking a
+               segment opens the segment rather than the requisition. */
+            picks={j.distribution.map((d) => ({
+              act: 'go',
+              v: applicationsUrl({ tab: 'pipeline', jobId: j.id, stages: [d.key] }),
+              tip: {
+                label: d.name,
+                value: fmt.int(d.n),
+                rows: [['On this requisition', j.title]],
+                action: `Open ${fmt.int(d.n)} live application${d.n === 1 ? '' : 's'}`,
+              },
+            })) satisfies Picks}
+          />
         ) : <div className="t-foot mut">Nobody in the pipeline yet</div>}
       </div>
     </article>

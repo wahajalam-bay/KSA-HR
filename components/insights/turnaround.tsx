@@ -2,7 +2,17 @@ import * as React from 'react';
 import {
   Card, Kpi, Empty, Bar, Table, Avatar, StagePill, Btn, type Column,
 } from '@/components/ui/primitives';
-import { HBars, Line, Pie, Legend, Heat } from '@/components/charts';
+import {
+  HBars, Line, Pie, Legend, Heat, type Pick, type Picks, type Picks2,
+} from '@/components/charts';
+import { applicationsUrl } from '@/lib/charts/drill';
+import type { DrillScope } from '@/lib/queries/insights';
+
+/** The last day of a calendar month, as a date. */
+const monthEnd = (month: string): string => {
+  const [y, m] = month.split('-').map(Number);
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+};
 import { RAMP } from '@/lib/charts/palette';
 import { fmt } from '@/lib/format';
 import type { TatRow, MonthRow } from '@/lib/queries/analytics';
@@ -32,11 +42,12 @@ export type TurnaroundData = {
   live: number;
   breaches: Breach[];
   shown: Breach[];
-  byStage: Array<{ label: string; value: number }>;
+  byStage: Array<{ keys: string[]; label: string; value: number }>;
   months: MonthRow[];
   heat: { rows: Array<{ label: string; values: Record<string, number | null> }>; cols: Array<{ key: string; name: string; short?: string }> };
   today: string;
   periodLabel: string;
+  scope: DrillScope;
 };
 
 const dcell = (v: number, bad: boolean) => <span className={bad ? 'bad-t' : ''}>{fmt.dec(v, 1)}</span>;
@@ -91,6 +102,86 @@ export function Turnaround({ d }: { d: TurnaroundData }) {
 
   const totalStuck = d.byStage.reduce((n, x) => n + x.value, 0) || 1;
 
+  /* A median is a duration, not a set of records — so the bar says out loud
+     how many applications its drill will find: the ones standing in that stage
+     right now. The median itself was taken over spells, which include spells
+     that ended, and there is no list of those. */
+  const stagePicks: Picks = d.rows.map((x): Pick => ({
+    ...(x.openNow
+      ? {
+        act: 'go',
+        v: applicationsUrl({ tab: 'pipeline', stages: [x.key], deptId: d.scope.deptId }),
+        n: x.openNow,
+      }
+      : {}),
+    tip: {
+      label: x.name,
+      value: `${fmt.dec(x.median, 1)} days`,
+      rows: [
+        ['Stage SLA', `${x.sla} days`],
+        ['90th percentile', `${fmt.dec(x.p90, 1)} days`],
+        ['Spells measured', fmt.int(x.n)],
+        ['Past the SLA', `${fmt.int(x.breaches)} · ${fmt.pct(x.breachRate)}`],
+        ['Standing here now', fmt.int(x.openNow)],
+      ],
+      ...(x.median > x.sla ? { note: 'The median itself is past the SLA.' } : {}),
+      ...(x.openNow
+        ? { action: `Open ${fmt.int(x.openNow)} live application${x.openNow === 1 ? '' : 's'}` }
+        : {}),
+    },
+  }));
+
+  /* The monthly line is the median for the people who joined in that calendar
+     month, whatever the period control says — so the drill carries the month
+     and the department, and not the period. */
+  const monthPicks: Picks2 = [d.months.map((m): Pick => ({
+    ...(m.hires
+      ? {
+        act: 'go',
+        v: applicationsUrl({
+          tab: 'hired', win: 'closed',
+          from: `${m.month}-01`, to: monthEnd(m.month), deptId: d.scope.deptId,
+        }),
+        n: m.hires,
+      }
+      : {}),
+    tip: {
+      label: m.label,
+      value: m.hires ? `${fmt.dec(m.timeToHire, 0)} days` : 'no hires',
+      rows: [
+        ['Hires that month', fmt.int(m.hires)],
+        ...(d.goalTimeToHire != null
+          ? [['Goal', `${d.goalTimeToHire} days`] as [string, string]] : []),
+      ],
+      ...(m.hires ? { action: `Open ${fmt.int(m.hires)} hire${m.hires === 1 ? '' : 's'}` } : {}),
+    },
+  }))];
+
+  const stuckPicks: Picks = d.byStage.map((x): Pick => ({
+    act: 'go',
+    v: applicationsUrl({
+      tab: 'pipeline', stages: x.keys, overSla: true, deptId: d.scope.deptId,
+    }),
+    tip: {
+      label: x.label,
+      value: `${fmt.int(x.value)} past SLA`,
+      rows: [['Share of everything past SLA', fmt.pct(x.value / totalStuck)]],
+      action: `Open ${fmt.int(x.value)} application${x.value === 1 ? '' : 's'}`,
+    },
+  }));
+
+  /* The heat cells are medians per recruiter per stage. There is no list of
+     "the spells behind this median", so they explain themselves. */
+  const heatPicks: Picks2 = d.heat.rows.map((r) => d.heat.cols.map((c): Pick => ({
+    tip: {
+      label: `${r.label} · ${c.name}`,
+      value: r.values[c.key] == null ? 'no spells' : `${fmt.dec(r.values[c.key]!, 1)} days`,
+      note: r.values[c.key] == null
+        ? 'None of their applications has spent time in this stage.'
+        : undefined,
+    },
+  })));
+
   return (
     <>
       <div className="grid g-kpi" style={{ marginBottom: 14 }}>
@@ -130,7 +221,7 @@ export function Turnaround({ d }: { d: TurnaroundData }) {
               spells.
             </span>
           }>
-          <HBars format="dec1"
+          <HBars format="dec1" picks={stagePicks}
             data={d.rows.map((x) => ({
               label: x.name, value: Math.round(x.median * 10) / 10,
               marker: x.sla, markerLabel: `SLA ${x.sla} days`,
@@ -152,7 +243,7 @@ export function Turnaround({ d }: { d: TurnaroundData }) {
                 being left out, so the sheet stays continuous.
               </span>
             }>
-            <Line format="days" h={240} dots
+            <Line format="days" h={240} dots picks={monthPicks}
               series={[{
                 name: 'Median time to hire',
                 points: d.months.map((m) => ({
@@ -170,8 +261,8 @@ export function Turnaround({ d }: { d: TurnaroundData }) {
             }>
             {d.byStage.length ? (
               <div className="pie-row">
-                <Pie segments={d.byStage} size={200} />
-                <Legend items={d.byStage.map((x, i) => ({
+                <Pie segments={d.byStage} size={200} picks={stuckPicks} />
+                <Legend picks={stuckPicks} items={d.byStage.map((x, i) => ({
                   color: RAMP[i % RAMP.length], label: x.label,
                   value: `${fmt.int(x.value)} · ${fmt.pct(x.value / totalStuck)}`,
                 }))} />
@@ -190,7 +281,7 @@ export function Turnaround({ d }: { d: TurnaroundData }) {
               everything still open), so a row with a thin pipeline moves on very few spells.
             </span>
           }>
-          <Heat rows={d.heat.rows} cols={d.heat.cols} format="dec1" />
+          <Heat rows={d.heat.rows} cols={d.heat.cols} format="dec1" picks={heatPicks} />
         </Card>
 
         <Card flush title={`Past SLA now — ${fmt.int(d.breaches.length)} applications`}

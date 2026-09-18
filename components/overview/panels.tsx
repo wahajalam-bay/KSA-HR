@@ -3,7 +3,8 @@ import {
   Card, Kpi, Li, Chip, Empty, Avatar, Table, Timeline, Priority, Btn, Push, type Column,
 } from '@/components/ui/primitives';
 import { Icon } from '@/components/ui/icons';
-import { Funnel, Bars, HBars, Spark } from '@/components/charts';
+import { Funnel, Bars, HBars, Spark, type Picks } from '@/components/charts';
+import { applicationsUrl, jobsUrl } from '@/lib/charts/drill';
 import { fmt, ago, daysAgo } from '@/lib/format';
 import * as W from '@/lib/domain/window';
 import { describe } from '@/components/jobs/activity';
@@ -304,13 +305,31 @@ export function Agenda({ data, today, now }: { data: OverviewData; today: string
 
 /* ── The four charts ────────────────────────────────────────────────────── */
 export function FunnelCard({ data }: { data: OverviewData }) {
+  /* A step counts the applications of the period's cohort that reached that
+     stage at any point — not the ones sitting in it. The drill says the same
+     thing: applied inside the window, and the stage history shows the stage.
+     A step nobody reached does not act; there is nothing to open. */
+  const picks: Picks = data.funnel.map((r) => (r.n
+    ? {
+      act: 'go',
+      v: applicationsUrl({
+        tab: 'all', apps: true, from: data.from, to: data.to, reached: r.key,
+      }),
+      tip: {
+        label: r.name,
+        value: fmt.int(r.n),
+        rows: [['Of everyone who applied', fmt.pct(r.convFromTop)]],
+        action: `Open ${fmt.int(r.n)} application${r.n === 1 ? '' : 's'}`,
+      },
+    }
+    : null));
   return (
     <Card title="The funnel"
       sub={`The ${fmt.int(data.applications.n)} applications that arrived in ${W.inLabel(data.window)}, by the
         furthest stage each one reached. Sourced entrants sit in the first row; Assessment is
         used by only some templates and is left out, so a step can read above 100%.`}>
       {data.applications.n
-        ? <Funnel rows={data.funnel} />
+        ? <Funnel rows={data.funnel} picks={picks} />
         : <Empty icon="filter" title="No applications in this period" />}
     </Card>
   );
@@ -319,6 +338,21 @@ export function FunnelCard({ data }: { data: OverviewData }) {
 export function PipelineNow({ data }: { data: OverviewData }) {
   const live = data.distribution.reduce((n, d) => n + d.n, 0);
   const atOffer = data.distribution.find((d) => d.key === 'offer')?.n ?? 0;
+  /* Live applications standing in that stage right now — which is exactly what
+     the pipeline tab lists when it is filtered to the stage. An empty stage
+     explains itself and does nothing. */
+  const picks: Picks = data.distribution.map((d) => (d.n
+    ? {
+      act: 'go',
+      v: applicationsUrl({ tab: 'pipeline', stages: [d.key] }),
+      tip: {
+        label: d.name,
+        value: fmt.int(d.n),
+        rows: [['Share of the live pipeline', fmt.pct(d.n / (live || 1))]],
+        action: `Open ${fmt.int(d.n)} live application${d.n === 1 ? '' : 's'}`,
+      },
+    }
+    : { tip: { label: d.name, value: '0', note: 'Nobody is standing here.' } }));
   return (
     <Card title="Where the pipeline sits now"
       sub={'Live applications by stage, across the nine-stage spine. Joined stays empty here because a '
@@ -331,7 +365,7 @@ export function PipelineNow({ data }: { data: OverviewData }) {
       }>
       {live
         ? <Bars data={data.distribution.map((d) => ({ label: d.short || d.name, value: d.n, color: `var(--stg-${d.band})` }))}
-            h={220} labelMax={8} />
+            h={220} labelMax={8} picks={picks} />
         : <Empty icon="users" title="Nobody in the pipeline" />}
     </Card>
   );
@@ -343,6 +377,34 @@ export function PlanCard({ data }: { data: OverviewData }) {
   const done = m.slice(0, -1), cur = m[m.length - 1];
   const dh = done.reduce((n, x) => n + x.hires, 0), dt = done.reduce((n, x) => n + x.target, 0);
   const all = m.reduce((n, x) => n + x.hires, 0), at = m.reduce((n, x) => n + x.target, 0);
+  /* A bar is the hires closed inside that bucket. The bucket is half-open on
+     timestamps; the drill is an inclusive pair of dates, and because every
+     boundary here is midnight the two describe the same set. */
+  const day = (iso: string, shift = 0) =>
+    new Date(Date.parse(iso) + shift * 86_400_000).toISOString().slice(0, 10);
+  const picks: Picks = m.map((x) => (x.hires
+    ? {
+      act: 'go',
+      v: applicationsUrl({
+        tab: 'hired', win: 'closed', from: day(x.start), to: day(x.end, -1),
+      }),
+      tip: {
+        label: x.label,
+        value: `${fmt.int(x.hires)} hire${x.hires === 1 ? '' : 's'}`,
+        rows: [
+          ['Plan', x.unit === 'week' ? fmt.dec(x.target, 1) : fmt.int(x.target)],
+          ['Against plan', x.target ? fmt.pct(x.hires / x.target) : '\u2014'],
+        ],
+        action: `Open ${fmt.int(x.hires)} hire${x.hires === 1 ? '' : 's'}`,
+      },
+    }
+    : {
+      tip: {
+        label: x.label,
+        value: 'no hires',
+        rows: [['Plan', x.unit === 'week' ? fmt.dec(x.target, 1) : fmt.int(x.target)]],
+      },
+    }));
   return (
     <Card title="Hiring against plan"
       sub={unit === 'week'
@@ -356,7 +418,7 @@ export function PlanCard({ data }: { data: OverviewData }) {
         </span>
       }>
       <Bars data={m.map((x) => ({ label: x.label, value: x.hires, target: x.target }))}
-        h={250} labelMax={6} padB={32} />
+        h={250} labelMax={6} padB={32} picks={picks} />
     </Card>
   );
 }
@@ -399,6 +461,22 @@ export function ReqsCard({ data }: { data: OverviewData }) {
 
 export function DeptsCard({ data }: { data: OverviewData }) {
   const ds = data.depts.filter((d) => d.openReqs);
+  /* The bar is openings on that department's open requisitions, so it lands on
+     those requisitions — the list adds the same openings up. */
+  const picks: Picks = ds.map((d) => ({
+    act: 'go',
+    v: jobsUrl({ status: 'open', deptId: d.id }),
+    tip: {
+      label: d.name,
+      value: `${fmt.int(d.openings)} opening${d.openings === 1 ? '' : 's'}`,
+      rows: [
+        ['Open requisitions', fmt.int(d.openReqs)],
+        ['People in play', fmt.int(d.live)],
+        ...(d.hires ? [['Hired in the period', fmt.int(d.hires)] as [string, string]] : []),
+      ],
+      action: `Open ${fmt.int(d.openReqs)} requisition${d.openReqs === 1 ? '' : 's'}`,
+    },
+  }));
   return (
     <Card title="Where the demand sits"
       sub={'Openings on open requisitions, ranked. The note behind each bar is the live pipeline and '
@@ -410,7 +488,7 @@ export function DeptsCard({ data }: { data: OverviewData }) {
         </span>
       }>
       {ds.length
-        ? <HBars data={ds.map((d) => ({
+        ? <HBars picks={picks} data={ds.map((d) => ({
             label: d.name, value: d.openings,
             note: `${fmt.int(d.live)} in play${d.hires ? ` · ${fmt.int(d.hires)} hired` : ''}`,
           }))} />

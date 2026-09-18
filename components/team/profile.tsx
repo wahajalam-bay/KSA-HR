@@ -4,7 +4,26 @@ import {
   StagePill, JobStatus, Priority, type Column,
 } from '@/components/ui/primitives';
 import { Icon } from '@/components/ui/icons';
-import { Bars, Grouped, Legend, Pie, HBars, Funnel } from '@/components/charts';
+import {
+  Bars, Grouped, Legend, Pie, HBars, Funnel, type Pick, type Picks, type Picks2,
+} from '@/components/charts';
+import { applicationsUrl } from '@/lib/charts/drill';
+
+/* The stage keys behind each group on this page's pipeline ring, in the order
+   the query builds them. They have to agree, or the ring lands on the wrong
+   people — so they are written once, here, and read from both ends. */
+/** The last day of a calendar month, as a date. */
+const monthEnd = (month: string): string => {
+  const [y, m] = month.split('-').map(Number);
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+};
+
+const PIPELINE_GROUPS: Record<string, string[]> = {
+  Applied: ['applied', 'sourced'],
+  Screening: ['screen', 'assessment'],
+  Interviewing: ['iv1', 'iv2', 'ivf'],
+  Offer: ['offer'],
+};
 import { CAT, RAMP } from '@/lib/charts/palette';
 import { fmt, ago, daysBetween } from '@/lib/format';
 import { roleDef, axisInt } from '@/lib/domain/team';
@@ -173,7 +192,30 @@ export function MonthlyCard({ d }: { d: Profile }) {
         sub={`Twelve months to ${ms[ms.length - 1]?.label ?? ''}. Target ${fmt.int(tgt)} a month — met or beaten in ${met} of the 12.`}>
         <Grouped h={250} format="plain"
           data={ms.map((m) => ({ label: m.label, hires: m.hires, target: tgt }))}
-          keys={keys} />
+          keys={keys}
+          /* [month][series]. The hires bar is a set of applications — the ones
+             they closed as hired inside that calendar month, which is exactly
+             how the series was counted. The target bar is a goal, not a set of
+             records, so it explains itself and does nothing. */
+          picks={ms.map((m): Picks => [
+            m.hires
+              ? {
+                act: 'go',
+                v: applicationsUrl({
+                  tab: 'hired', win: 'closed',
+                  from: `${m.month}-01`, to: monthEnd(m.month),
+                  ownerId: p.id,
+                }),
+                tip: {
+                  label: m.label,
+                  value: `${fmt.int(m.hires)} hire${m.hires === 1 ? '' : 's'}`,
+                  rows: [['Their monthly target', fmt.int(tgt)]],
+                  action: `Open ${fmt.int(m.hires)} hire${m.hires === 1 ? '' : 's'}`,
+                },
+              }
+              : { tip: { label: m.label, value: 'no hires', rows: [['Their monthly target', fmt.int(tgt)]] } },
+            { tip: { label: `${m.label} · target`, value: fmt.int(tgt), note: 'The goal for the month, not a set of records.' } },
+          ]) satisfies Picks2} />
         <Legend items={keys.map((k) => ({ color: k.color, label: k.name }))} />
       </Card>
     );
@@ -188,7 +230,14 @@ export function MonthlyCard({ d }: { d: Profile }) {
   }
   return (
     <Card title={sup.monthlyTitle} sub={sup.monthlySub}>
-      <Bars data={sup.monthly} h={230} labelMax={6} format="plain" />
+      {/* What this series counts depends on the role — applications sourced,
+          letters verified, interviews scheduled — and the product has no one
+          list that answers all three. The bars say what they are and lead
+          nowhere rather than somewhere near. */}
+      <Bars data={sup.monthly} h={230} labelMax={6} format="plain"
+        picks={sup.monthly.map((m): Pick => ({
+          tip: { label: m.label, value: fmt.int(m.value), note: sup.monthlySub },
+        }))} />
     </Card>
   );
 }
@@ -228,6 +277,21 @@ export function KpiBand({ d, win }: { d: Profile; win: W.Window }) {
 export function PipelinePie({ d }: { d: Profile }) {
   if (!d.liveOwned) return null;
   const tot = d.pipelineGroups.reduce((n, x) => n + x.value, 0) || 1;
+  /* These are the live applications they own OR sourced — a sourcer's pipeline
+     is the work they brought in — grouped by stage. The list behind a slice is
+     filtered the same way. */
+  const groupPicks: Picks = d.pipelineGroups.map((x) => ({
+    act: 'go',
+    v: applicationsUrl({
+      tab: 'pipeline', touchedBy: d.person.id, stages: PIPELINE_GROUPS[x.label] ?? [],
+    }),
+    tip: {
+      label: x.label,
+      value: `${fmt.int(x.value)} live application${x.value === 1 ? '' : 's'}`,
+      rows: [['Share of their pipeline', fmt.pct(x.value / tot)]],
+      action: `Open ${fmt.int(x.value)} live application${x.value === 1 ? '' : 's'}`,
+    },
+  }));
   return (
     <Card title="Their live pipeline"
       sub={`${fmt.int(d.liveOwned)} applications they own or sourced, by stage group.`}
@@ -237,8 +301,8 @@ export function PipelinePie({ d }: { d: Profile }) {
         </span>
       }>
       <div className="pie-row">
-        <Pie segments={d.pipelineGroups} size={200} />
-        <Legend items={d.pipelineGroups.map((x, i) => ({
+        <Pie segments={d.pipelineGroups} size={200} picks={groupPicks} />
+        <Legend picks={groupPicks} items={d.pipelineGroups.map((x, i) => ({
           color: RAMP[i % RAMP.length], label: x.label,
           value: `${fmt.int(x.value)} · ${fmt.pct(x.value / tot)}`,
         }))} />
@@ -247,9 +311,11 @@ export function PipelinePie({ d }: { d: Profile }) {
   );
 }
 
-export function FunnelCard({ d, win }: { d: Profile; win: W.Window }) {
+export function FunnelCard({ d, win, now }: { d: Profile; win: W.Window; now: Date }) {
   const own = d.stat.funnelOwn[0]?.n ?? 0;
   const rows = own ? d.stat.funnelOwn : d.sourcedFunnel;
+  const fromAt = new Date(now.getTime() - win.days * 86_400_000).toISOString();
+  const toAt = now.toISOString();
   if (!rows?.length) {
     return (
       <Card title="Their funnel">
@@ -263,7 +329,23 @@ export function FunnelCard({ d, win }: { d: Profile; win: W.Window }) {
       sub={own
         ? `Applications they own, touched in the ${W.label(win).toLowerCase()}.`
         : 'Applications they sourced in the period.'}>
-      <Funnel rows={rows} />
+      <Funnel rows={rows} picks={rows.map((r): Pick | null => (r.n
+        ? {
+          act: 'go',
+          v: applicationsUrl({
+            tab: 'all', apps: true, reached: r.key,
+            ...(own
+              ? { ownerId: d.person.id, win: 'touched', fromAt, toAt }
+              : { touchedBy: d.person.id, win: 'applied', fromAt, toAt }),
+          }),
+          tip: {
+            label: r.name,
+            value: fmt.int(r.n),
+            rows: [['Of everyone at the top', fmt.pct(r.convFromTop)]],
+            action: `Open ${fmt.int(r.n)} application${r.n === 1 ? '' : 's'}`,
+          },
+        }
+        : null))} />
     </Card>
   );
 }
@@ -282,7 +364,24 @@ export function TatCard({ d }: { d: Profile }) {
   return (
     <Card title="Time in stage against SLA"
       sub={`Median days on the applications they ${own ? 'own' : 'sourced'}. Red where the median is already past the stage SLA.`}>
-      <HBars format="days" data={rows.map((x) => ({
+      <HBars format="days"
+        /* A median is not a set. These say what they measured — how many
+           spells, how many of them broke the SLA — and lead nowhere, because
+           "the applications behind this median" is not a list the product
+           keeps. */
+        picks={rows.map((x): Pick => ({
+          tip: {
+            label: x.name,
+            value: `${fmt.dec(x.median, 1)} days`,
+            rows: [
+              ['Stage SLA', `${x.sla} days`],
+              ['Spells measured', fmt.int(x.n)],
+              ...(x.breaches ? [['Past the SLA', fmt.int(x.breaches)] as [string, string]] : []),
+            ],
+            ...(x.median > x.sla ? { note: 'The median is already past the SLA.' } : {}),
+          },
+        }))}
+        data={rows.map((x) => ({
         label: x.name,
         value: Math.round(x.median * 10) / 10,
         marker: x.sla,

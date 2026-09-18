@@ -107,8 +107,21 @@ const toSlot = (r: any): Slot => ({
 });
 
 /* ── The agenda ─────────────────────────────────────────────────────────── */
+export type AgendaFilters = {
+  range?: string; owner?: string; mode?: string;
+  /* An exact span, in instants rather than days — which is what a chart on the
+     Load tab counts by. `after` is exclusive and `fromAt` inclusive, because
+     the windows those charts use are not all closed at the same end: a week bar
+     counts `(start, end]` and the format ring counts `[now - 30d, now + 14d]`.
+     Getting that wrong by one boundary is how a drill-down quietly returns one
+     record more than the bar it came from. */
+  after?: string; fromAt?: string; toAt?: string;
+  /* Somebody on the panel, by the name the interview records. */
+  panel?: string;
+};
+
 export async function agenda(
-  v: Viewer, f: { range?: string; owner?: string; mode?: string }, now: Date, exec: Exec = db(),
+  v: Viewer, f: AgendaFilters, now: Date, exec: Exec = db(),
 ) {
   const scope = sql`i.job_id IN (SELECT id FROM ${jobs} WHERE ${jobScopeSql(v)})`;
   const list = rowsOf(await exec.execute(sql`
@@ -142,18 +155,32 @@ export async function agenda(
     if (k < today) counts.past += 1;
   }
 
-  const range = f.range ?? 'up';
+  /* A span, when one was given, replaces the day ranges entirely — the two
+     answer different questions and mixing them would answer neither. */
+  const span = !!(f.after || f.fromAt || f.toAt);
+  const range = span ? 'span' : (f.range ?? 'up');
   const inRange = (k: string) =>
     (range === 'week' ? k >= weekStart && k <= weekEnd : range === 'past' ? k < today : k >= today);
+  const afterMs = f.after ? Date.parse(f.after) : null;
+  const fromMs = f.fromAt ? Date.parse(f.fromAt) : null;
+  const toMs = f.toAt ? Date.parse(f.toAt) : null;
+  const inSpan = (iso: string) => {
+    const t = Date.parse(iso);
+    if (afterMs != null && !(t > afterMs)) return false;
+    if (fromMs != null && t < fromMs) return false;
+    if (toMs != null && t > toMs) return false;
+    return true;
+  };
 
   const kept = list.filter((i) => {
-    if (!inRange(dayKey(i.at))) return false;
+    if (span ? !inSpan(i.at) : !inRange(dayKey(i.at))) return false;
     if (f.mode && i.mode !== f.mode) return false;
+    if (f.panel && !i.panel.includes(f.panel)) return false;
     if (f.owner && ownerOf.get(i.applicationId) !== f.owner) return false;
     return true;
   });
 
-  const desc = range === 'past';
+  const desc = range === 'past' || (span && toMs != null && toMs <= now.getTime());
   const shown = [...kept].sort((a, b) => (desc ? b.at.localeCompare(a.at) : a.at.localeCompare(b.at)))
     .slice(0, desc ? 90 : 400);
 
@@ -440,7 +467,12 @@ export async function load(v: Viewer, now: Date, exec: Exec = db()) {
   }
 
   const byWeek = new Map(rowsOf(weeksRows).map((r) => [r.key as string, Number(r.n)]));
-  const weeks = weekWindows(now).map((x) => ({ label: x.label, value: byWeek.get(x.key) ?? 0 }));
+  /* The bar carries its own boundaries, so a drill-down can ask for exactly
+     the interval that was counted rather than a day range near it. */
+  const weeks = weekWindows(now).map((x) => ({
+    label: x.label, value: byWeek.get(x.key) ?? 0,
+    start: x.start, end: x.end, ahead: Date.parse(x.end) > now.getTime(),
+  }));
 
   return { ahead, held, open, rows: [...rows.values()], weeks };
 }

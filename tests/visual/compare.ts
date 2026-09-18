@@ -19,9 +19,32 @@ import { CAPTURES, VIEWPORTS, THEMES, DEFAULT_TOLERANCE, KNOWN_DIFFERENCES } fro
 import { signInProduction, settle, expand, collapse, TEST_ACCOUNTS } from './drive';
 
 const BASE = process.env.APP_URL ?? 'http://127.0.0.1:3400';
-const BASELINE = path.join(process.cwd(), 'tests', 'visual', 'baseline');
 const OUT = path.join(process.cwd(), 'tests', 'visual', 'out');
 const DIFF = path.join(process.cwd(), 'tests', 'visual', 'diff');
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   TWO FAMILIES OF BASELINE
+
+   `prototype` is the single-file prototype, photographed once. It is the
+   specification and it is historical evidence of what was asked for, so nothing
+   in this repository writes to it — the guard below refuses even when told to.
+   Compare against it to answer "does this still look like what we agreed".
+
+   `current` is the branded application as it stands. Compare against it to
+   answer a different and equally important question: "has anything moved that
+   nobody meant to move" — which is what catches a hover rule leaking into the
+   resting state, or a chart that now sits two pixels lower on every page.
+
+     npm run visual:compare                  against the prototype
+     npm run visual:compare -- --against=current
+     npm run visual:adopt                    record the current family
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+const FAMILIES = {
+  prototype: { dir: 'baseline', writable: false },
+  current: { dir: 'current', writable: true },
+} as const;
+type Family = keyof typeof FAMILIES;
 
 const args = process.argv.slice(2);
 /* Any number of ids or fragments: `compare.ts insights-ask insights-sources`
@@ -30,9 +53,33 @@ const filters = args.filter((a) => !a.startsWith('--')).flatMap((a) => a.split('
 const wanted = (id: string) => !filters.length || filters.some((f) => id.includes(f));
 const writeDiff = args.includes('--write');
 
+const familyArg = (args.find((a) => a.startsWith('--against='))?.split('=')[1] ?? 'prototype') as Family;
+if (!(familyArg in FAMILIES)) {
+  console.error(`  --against must be one of: ${Object.keys(FAMILIES).join(', ')}`);
+  process.exit(1);
+}
+const FAMILY: Family = familyArg;
+const BASELINE = path.join(process.cwd(), 'tests', 'visual', FAMILIES[FAMILY].dir);
+
+/* Adopting copies what was just photographed into the family, so the next run
+   measures against it. The prototype is never a target: it records what was
+   asked for, and a specification that quietly follows the implementation is not
+   a specification. */
+const adopt = args.includes('--adopt');
+if (adopt && !FAMILIES[FAMILY].writable) {
+  console.error('  The prototype baselines are reference evidence and are never overwritten.');
+  console.error('  Adopt into the current family instead: --against=current --adopt');
+  process.exit(1);
+}
+
+/* Against its own family a capture should be identical; only anti-aliasing
+   moves, and the per-channel tolerance in `diff` already absorbs that. */
+const toleranceFor = (cap?: number) => (FAMILY === 'current' ? 0.0005 : cap ?? DEFAULT_TOLERANCE);
+
 type Result = {
   id: string; viewport: string; theme: string;
   pct: number | null; note?: string; known?: string; errors: string[];
+  tolerance?: number;
 };
 
 async function main() {
@@ -134,11 +181,24 @@ async function capture(
   await collapse(page);
 
   const base = path.join(BASELINE, name);
+  if (adopt) {
+    fs.mkdirSync(BASELINE, { recursive: true });
+    fs.copyFileSync(shot, base);
+    return { id, viewport: vp, theme, pct: 0, note: 'adopted', errors };
+  }
   if (!fs.existsSync(base)) {
     return { id, viewport: vp, theme, pct: null, note: 'no baseline', errors };
   }
   const { pct, note } = diff(base, shot, writeDiff ? path.join(DIFF, name) : null);
-  return { id, viewport: vp, theme, pct, note, known: KNOWN_DIFFERENCES[id], errors };
+  return {
+    id, viewport: vp, theme, pct, note,
+    /* A difference from the prototype can be a decision somebody recorded. A
+       difference from the current family is always a change nobody asked for,
+       so nothing excuses one. */
+    known: FAMILY === 'prototype' ? KNOWN_DIFFERENCES[id] : undefined,
+    errors,
+    tolerance: toleranceFor(tolerance),
+  };
 }
 
 /* A plain per-pixel comparison with a small tolerance per channel. Anti-aliasing
@@ -187,7 +247,7 @@ function diff(aPath: string, bPath: string, outPath: string | null): { pct: numb
     if (outPath) fs.writeFileSync(outPath, PNG.sync.write(out));
   }
   const note = a.height === b.height ? undefined
-    : `${b.height > a.height ? b.height - a.height : a.height - b.height}px ${b.height > a.height ? 'taller' : 'shorter'} than the prototype`;
+    : `${b.height > a.height ? b.height - a.height : a.height - b.height}px ${b.height > a.height ? 'taller' : 'shorter'} than the baseline`;
   return { pct: differing / (w * tallest), note };
 }
 
@@ -200,15 +260,20 @@ function report(results: Result[]) {
   const byId = new Map<string, Result[]>();
   for (const r of rows) byId.set(r.id, [...(byId.get(r.id) ?? []), r]);
 
-  console.log('\n  Visual parity against the prototype\n');
+  if (adopt) {
+    console.log(`\n  ${rows.length} capture(s) recorded as the ${FAMILY} family\n`);
+    process.exit(0);
+  }
+
+  console.log(`\n  Visual parity against the ${FAMILY}\n`);
   console.log('  route                      worst   where                 verdict');
   console.log('  ' + '─'.repeat(78));
 
   for (const [id, list] of [...byId.entries()].sort()) {
     const worst = list.reduce((a, b) => ((b.pct ?? 0) > (a.pct ?? 0) ? b : a));
     const pct = worst.pct ?? 0;
-    const tol = DEFAULT_TOLERANCE;
-    const known = KNOWN_DIFFERENCES[id];
+    const tol = worst.tolerance ?? DEFAULT_TOLERANCE;
+    const known = worst.known;
     const ok = pct <= tol;
     if (!ok && !known) failures.push(worst);
     const verdict = ok ? 'match' : known ? 'expected' : 'REGRESSION';
@@ -234,7 +299,10 @@ function report(results: Result[]) {
   }
 
   const matched = byId.size - failures.length;
-  console.log(`\n  ${matched} of ${byId.size} routes within ${(DEFAULT_TOLERANCE * 100).toFixed(0)}% of the prototype`);
+  const headline = FAMILY === 'current'
+    ? `\n  ${matched} of ${byId.size} routes are pixel-for-pixel what they were`
+    : `\n  ${matched} of ${byId.size} routes within ${(DEFAULT_TOLERANCE * 100).toFixed(0)}% of the prototype`;
+  console.log(headline);
   if (withErrors.length) console.log(`  ${withErrors.length} capture(s) logged a console error`);
   console.log('');
 
@@ -242,7 +310,8 @@ function report(results: Result[]) {
      parity numbers are one of the things this project has to be able to show. */
   const report = {
     at: new Date().toISOString(),
-    tolerance: DEFAULT_TOLERANCE,
+    family: FAMILY,
+    tolerance: toleranceFor(),
     matched,
     total: byId.size,
     routes: [...byId.entries()].sort().map(([id, list]) => {
@@ -252,8 +321,8 @@ function report(results: Result[]) {
         worst: worst.pct,
         where: `${worst.viewport} ${worst.theme}`,
         note: worst.note ?? null,
-        known: KNOWN_DIFFERENCES[id] ?? null,
-        ok: (worst.pct ?? 0) <= DEFAULT_TOLERANCE,
+        known: worst.known ?? null,
+        ok: (worst.pct ?? 0) <= (worst.tolerance ?? DEFAULT_TOLERANCE),
         captures: list.map((r) => ({ viewport: r.viewport, theme: r.theme, pct: r.pct, note: r.note ?? null })),
       };
     }),
@@ -261,7 +330,8 @@ function report(results: Result[]) {
     consoleErrors: withErrors.map((r) => ({ id: r.id, viewport: r.viewport, theme: r.theme, errors: r.errors.slice(0, 5) })),
   };
   fs.mkdirSync(path.join(process.cwd(), 'tests', 'reports'), { recursive: true });
-  const file = path.join(process.cwd(), 'tests', 'reports', 'visual.json');
+  const file = path.join(process.cwd(), 'tests', 'reports',
+    FAMILY === 'current' ? 'visual-current.json' : 'visual.json');
   fs.writeFileSync(file, JSON.stringify(report, null, 2));
   console.log(`  report written to ${path.relative(process.cwd(), file)}
 `);

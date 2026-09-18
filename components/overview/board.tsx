@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Card, Li, Chip, Bar, Empty, AvatarStack } from '@/components/ui/primitives';
 import { Badge, Icon } from '@/components/ui/icons';
 import { BrandLogo } from '@/components/ui/brand';
-import { Pie, Legend, Spark } from '@/components/charts';
+import { Pie, Legend, Spark, type Picks } from '@/components/charts';
+import { applicationsUrl } from '@/lib/charts/drill';
 import { RAMP } from '@/lib/charts/palette';
 import { fmt, daysBetween } from '@/lib/format';
 import * as W from '@/lib/domain/window';
@@ -21,12 +22,27 @@ const ROLES: Array<[string, string]> = [
   ['analyst', 'Analysts'], ['onboarding', 'Onboarding'], ['tal_lead', 'TA lead'],
 ];
 
-export function TeamComposition({ data }: { data: OverviewData }) {
+export function TeamComposition({ data, canOpen }: {
+  data: OverviewData;
+  /* Whether this account may open the team's record at all. A slice that
+     leads to a refusal is worse than a slice that simply explains itself. */
+  canOpen?: boolean;
+}) {
   const team = data.team;
   const segs = ROLES
-    .map(([k, label]) => ({ label, value: team.filter((p) => p.role === k).length }))
+    .map(([k, label]) => ({ key: k, label, value: team.filter((p) => p.role === k).length }))
     .filter((x) => x.value)
     .sort((a, b) => b.value - a.value);
+  const teamTotal = segs.reduce((n, s) => n + s.value, 0) || 1;
+  const picks: Picks = segs.map((s) => ({
+    ...(canOpen ? { act: 'go', v: `/team?role=${encodeURIComponent(s.key)}` } : {}),
+    tip: {
+      label: s.label,
+      value: fmt.int(s.value),
+      rows: [['Share of the desk', fmt.pct(s.value / teamTotal)]],
+      ...(canOpen ? { action: `Open the ${s.label.toLowerCase()}` } : {}),
+    },
+  }));
 
   const recruiters = team.filter((p) => p.role === 'recruiter' || p.role === 'tal_lead');
   const months = Math.max(1, data.window.days / 30.4);
@@ -44,10 +60,10 @@ export function TeamComposition({ data }: { data: OverviewData }) {
       }
     >
       <div className="pie-row">
-        <Pie segments={segs} size={210} />
+        <Pie segments={segs} size={210} picks={picks} />
         <Legend items={segs.map((x, i) => ({
           color: RAMP[i % RAMP.length], label: x.label, value: fmt.int(x.value),
-        }))} />
+        }))} picks={picks} />
       </div>
       <div className="avrow">
         <AvatarStack people={team} max={6} />
@@ -128,6 +144,36 @@ export function SourcesDonut({ data }: { data: OverviewData }) {
     ...(other ? [{ label: 'Other', value: other, color: 'var(--wave-5)' }] : []),
   ];
   const total = segs.reduce((n, s) => n + s.value, 0) || 1;
+
+  /* A channel's slice is the applications that arrived through it inside the
+     period. "Other" is the rest of the ranking, and it lands on all of those
+     channels at once rather than on nothing. */
+  const rest = data.sources.slice(4).map((m) => m.source);
+  const picks: Picks = segs.map((s, i) => {
+    const m = top[i];
+    const isOther = i >= top.length;
+    return {
+      act: 'go',
+      v: applicationsUrl({
+        tab: 'all', apps: true, from: data.from, to: data.to,
+        ...(isOther ? { sources: rest } : { source: m.source }),
+      }),
+      tip: {
+        label: isOther ? `Other channels` : m.source,
+        value: `${fmt.int(s.value)} application${s.value === 1 ? '' : 's'}`,
+        rows: [
+          ['Share of the period', fmt.pct(s.value / total)],
+          ...(isOther
+            ? [['Channels', fmt.int(rest.length)] as [string, string]]
+            : [
+              ['Hires from it', fmt.int(m.hires)] as [string, string],
+              ['Converts to hire', fmt.pct(m.conv)] as [string, string],
+            ]),
+        ],
+        action: `Open ${fmt.int(s.value)} application${s.value === 1 ? '' : 's'}`,
+      },
+    };
+  });
   return (
     <Card
       title="Sourcing channels" icon="search"
@@ -139,8 +185,9 @@ export function SourcesDonut({ data }: { data: OverviewData }) {
       }
     >
       <div className="pie-row">
-        <Pie segments={segs} size={210} />
-        <Legend items={segs.map((s) => ({ color: s.color!, label: s.label, value: fmt.pct(s.value / total) }))} />
+        <Pie segments={segs} size={210} picks={picks} />
+        <Legend picks={picks}
+          items={segs.map((s) => ({ color: s.color!, label: s.label, value: fmt.pct(s.value / total) }))} />
       </div>
     </Card>
   );

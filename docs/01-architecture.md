@@ -156,6 +156,70 @@ and fails if one does not resolve. A name that is both a command and a panel is
 failed as well, because the classifier would open the panel where the author
 meant to run the command.
 
+## Charts
+
+Every chart in the product comes from one module, `components/charts/index.tsx`,
+and every mark on one — a bar, a slice, a cell, a funnel row, a legend entry —
+is interactive through the same delegated listener as everything else. A chart
+does not carry handlers, because it could not: it is a client component and the
+page that draws it is a server one, and a function cannot cross that boundary.
+
+So the contract is **data**, in `lib/charts/interaction.ts`. A caller passes
+`picks`, one per mark, and a mark becomes:
+
+| It carries | And so |
+| --- | --- |
+| `data-tip` | the product's own tooltip draws it — on hover *and* on keyboard focus |
+| `data-act` / `data-v` | the same dispatcher that runs every button follows it |
+| `tabindex`, `role`, `aria-label` | it is a button, whatever element it happens to be |
+| `.cmk`, `.pickable`, `.on` | the stylesheet gives it hover, focus and selected states |
+
+Three consequences are worth saying out loud.
+
+**A drill-down cannot bypass access control**, because analytics is not doing
+the fetching. A mark navigates to an ordinary page, and that page applies the
+viewer's scope exactly as it always did. A hiring manager clicking a bar gets
+their own requisitions because the requisitions page gives them their own
+requisitions — not because the chart remembered to ask.
+
+**Every drill has its URL**, so Back works, a filtered view can be sent to a
+colleague, and the page it lands on says what filtered it (`DrillChips`).
+
+**A mark that cannot land anywhere honest does not pretend to.** A band of
+interview scores, a hire's previous salary, a probation outcome — the product
+keeps no list of those, so those marks explain themselves in a tooltip and stay
+out of the tab order. Inventing a nearby destination would be worse than none.
+
+### The number on the chart and the number on the list are the same number
+
+They come from different queries by necessity: one aggregates, the other lists,
+and they are written months apart in different files. `tests/charts/` takes each
+card, reads the marks it actually drew, follows each mark's URL, runs the query
+that URL asks for, and insists the count comes back identical — under an admin
+account and under a scoped one, because `jobScopeSql` collapses to `true` for
+every desk account and a leak is therefore invisible to everyone who builds the
+product.
+
+Where a mark is not itself a count — a median, a rate — the pick states how
+many records its drill will find, so the suite can hold it to the same standard
+instead of skipping it.
+
+This is also why the filter vocabulary in `lib/queries/candidates.ts` is as
+precise as it is. A period is carried as dates where the report compares by day
+and as instants where it compares by the clock; `win` says whether the period is
+about the application arriving, closing, being open, or being anything the
+period may talk about. Off by one boundary is a list that disagrees with the bar
+it came from, quietly, and only sometimes.
+
+### Ask AI draws, it does not hand out records
+
+A report on the Ask AI tab is assembled from whatever was typed — any metric
+against any dimension — so there is no query-and-destination pair to check. Its
+marks explain themselves and link to nothing. The figures are already inside the
+account's access, because the resolver reads the same scoped dataset every other
+report does; this stops a second, unchecked way in being opened on top of it.
+`tests/charts/ask.test.ts` holds that line.
+
 ## Confirmations
 
 A command that is about to do something hard to undo returns
@@ -270,4 +334,6 @@ session expiry.
 | `tests/sheets/render.test.ts` | A panel whose query has drifted from the schema |
 | `tests/sheets/wiring.test.ts` | A button wired to nothing, or to the panel it lives in |
 | `tests/sheets/accessibility.test.ts` | A control nothing announces, or nothing can tab to |
+| `tests/charts/*.test.ts` | A chart whose drill-down finds a different number from the one it drew, or leaks past a scope, or claims a destination it has no honest answer for |
+| `tests/visual/interact.ts` | A mark that cannot be reached by keyboard, a tooltip that falls off the screen, a chart that spills sideways on a phone |
 | `tests/visual/compare.ts` | A pixel that moved

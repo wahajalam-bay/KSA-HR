@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Card, Chip, Table, Btn, Push, type Column } from '@/components/ui/primitives';
 import { Badge, Icon } from '@/components/ui/icons';
-import { Bars, HBars, Pie, Legend } from '@/components/charts';
+import { Bars, HBars, Pie, Legend, type Pick, type Picks } from '@/components/charts';
 import { RAMP } from '@/lib/charts/palette';
 import { fmt } from '@/lib/format';
 import { METRICS, DIMS, SUGGESTIONS, parse, title as reportTitle } from '@/lib/services/ask';
@@ -128,20 +128,46 @@ function ReportCard({ spec, res, vocab }: {
       : { t: 'Share', n: true, f: (r) => fmt.pct(r.value / (total || 1)) },
   ];
 
+  /* ── Why nothing here is clickable ────────────────────────────────────────
+     Every other chart in the product knows what its marks stand for, because
+     somebody wrote the query and the destination side by side and a suite holds
+     the two to each other. A report here is assembled from whatever was asked:
+     any metric against any dimension, aggregated or not. Building a link from
+     that would mean guessing at a filter that matches what was counted, and a
+     guess that is wrong is a list of records somebody was never meant to be
+     handed. So these marks say exactly what they are worth — the figure, the
+     records behind it, its share — and lead nowhere.
+
+     The figures themselves are already inside the account's access: `resolve`
+     reads the same scoped dataset every other report does. This is about not
+     inventing a second, unchecked way into records on top of it. */
+  const shown = spec.dim === 'month' ? s : s.slice(0, spec.share && !res.agg && s.length <= 8 ? 8 : 12);
+  const askPicks: Picks = shown.map((x): Pick => ({
+    tip: {
+      label: x.label,
+      value: res.unit === '%' ? `${x.value}%` : res.unit === 'days' ? `${x.value} days` : fmt.int(x.value),
+      rows: [
+        ['Records behind it', fmt.int(x.n)],
+        ...(res.agg ? [] : [['Share of the answer', fmt.pct(x.value / (total || 1))] as [string, string]]),
+      ],
+    },
+  }));
+
   const chart = !s.length ? null
     : spec.dim === 'month'
       ? <Bars data={s.map((x) => ({ label: x.label, value: x.value || 0 }))} h={220} labelMax={8}
-        format={res.unit === '%' ? 'pct' : 'int'} />
+        format={res.unit === '%' ? 'pct' : 'int'} picks={askPicks} />
       : spec.share && !res.agg && s.length <= 8
         ? (
           <div className="pie-row">
-            <Pie segments={s.slice(0, 8).map((x) => ({ label: x.label, value: x.value }))} size={200} />
-            <Legend items={s.slice(0, 8).map((x, i) => ({
+            <Pie segments={s.slice(0, 8).map((x) => ({ label: x.label, value: x.value }))} size={200}
+              picks={askPicks} />
+            <Legend picks={askPicks} items={s.slice(0, 8).map((x, i) => ({
               color: RAMP[i % RAMP.length], label: x.label, value: fmt.int(x.value),
             }))} />
           </div>
         )
-        : <HBars data={s.slice(0, 12).map((x) => ({ label: x.label, value: x.value || 0 }))}
+        : <HBars picks={askPicks} data={s.slice(0, 12).map((x) => ({ label: x.label, value: x.value || 0 }))}
           format={res.unit === '%' ? 'pct' : res.unit === 'days' ? 'days' : 'int'} />;
 
   return (

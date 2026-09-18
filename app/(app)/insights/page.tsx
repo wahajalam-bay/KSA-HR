@@ -93,7 +93,8 @@ export default async function InsightsPage({ searchParams }: {
 
         {tab === 'tat' ? <Turnaround d={await I.turnaround(c, viewer)} />
           : tab === 'recruiters' ? (
-            <Recruiters rows={sortRecruiters(await I.recruiters(c, viewer), sp.sort, sp.dir)}
+            <Recruiters scope={I.drillScope(c)}
+              rows={sortRecruiters(await I.recruiters(c, viewer), sp.sort, sp.dir)}
               sortKey={sp.sort && RECRUITER_SORT_KEYS.includes(sp.sort) ? sp.sort : 'hires'}
               sortDir={Number(sp.dir) === 1 ? 1 : -1} />
           )

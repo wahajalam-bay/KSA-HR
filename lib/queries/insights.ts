@@ -105,6 +105,36 @@ export async function context(
   };
 }
 
+/* ═════════════════════════════════════════════════════════════════════════════
+   WHERE A MARK ON THIS PAGE LANDS
+
+   Every tab is built from one context: one period, one department scope. So a
+   drill-down off any chart on any tab needs exactly the same two things, and
+   getting them from the context rather than from the card is what keeps forty
+   charts landing on the same set the page was counting.
+
+   The period is carried the way the page actually reads it. A calendar range is
+   compared by day, so it travels as dates. A preset is compared by the clock —
+   "the last ninety days" is ninety times twenty-four hours from this moment —
+   so it travels as instants. Sending one as the other is off by up to a day,
+   in whichever direction nobody checks.
+   ═════════════════════════════════════════════════════════════════════════════*/
+
+export type DrillScope = {
+  from?: string; to?: string; fromAt?: string; toAt?: string; deptId?: string;
+};
+
+export function drillScope(c: InsightsContext): DrillScope {
+  const dept = c.deptId || undefined;
+  return W.isRange(c.w)
+    ? { from: c.w.from, to: c.w.to, deptId: dept }
+    : {
+      fromAt: new Date(c.now.getTime() - c.w.days * 86_400_000).toISOString(),
+      toAt: c.now.toISOString(),
+      deptId: dept,
+    };
+}
+
 /** The head line under the page title. */
 export function headline(c: InsightsContext) {
   const hires = A.hiresIn(c.apps, c.w, c.now).length;
@@ -133,6 +163,8 @@ export async function scorecard(c: InsightsContext, v: Viewer, exec: Exec = db()
     .filter((x): x is number => x != null);
 
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     months,
     hires: hs.length,
     target: Math.round(c.goalHires * (c.w.days / 30.4)),
@@ -169,7 +201,7 @@ export async function turnaround(c: InsightsContext, v: Viewer, exec: Exec = db(
   for (const a of c.apps) stageName.set(a.stage, DEFAULT_NAMES[a.stage]);
 
   const byStage = STAGE_KEYS
-    .map((k) => ({ label: DEFAULT_NAMES[k], value: over.filter((a) => a.stage === k).length }))
+    .map((k) => ({ keys: [k as string], label: DEFAULT_NAMES[k], value: over.filter((a) => a.stage === k).length }))
     .filter((x) => x.value)
     .sort((a, b) => b.value - a.value);
   const topStages = byStage.slice(0, 4);
@@ -187,6 +219,8 @@ export async function turnaround(c: InsightsContext, v: Viewer, exec: Exec = db(
   };
 
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     rows: A.tat(scoped, c.now),
     timeToHire: A.timeToHire(scoped),
     timeToFill: A.timeToFill(scoped, c.jobsById),
@@ -195,7 +229,13 @@ export async function turnaround(c: InsightsContext, v: Viewer, exec: Exec = db(
     live: c.apps.filter(A.isLive).length,
     breaches: over.map(toBreach),
     shown: over.slice(0, 25).map(toBreach),
-    byStage: restStages ? [...topStages, { label: 'Other stages', value: restStages }] : topStages,
+    byStage: restStages
+      ? [...topStages, {
+        keys: byStage.slice(4).flatMap((x) => x.keys),
+        label: 'Other stages',
+        value: restStages,
+      }]
+      : topStages,
     months,
     heat: {
       rows: lb.map((s) => {
@@ -241,6 +281,8 @@ export function sources(c: InsightsContext) {
   const scoped = A.scopeOf(c.apps, c.w, c.now);
   const mix = A.sourceMix(scoped);
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     mix,
     applications: scoped.length,
     totalHires: A.sum(mix.map((s) => s.hires)),
@@ -255,6 +297,8 @@ export function departments(c: InsightsContext) {
     .filter((d) => !c.deptId || d.id === c.deptId);
   const open = c.data.jobs.filter((j) => j.status === 'open');
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     rows: stats.map((d) => ({
       ...d,
       managers: [...new Set(open.filter((j) => j.deptId === d.id)
@@ -328,6 +372,8 @@ export function market(c: InsightsContext) {
   }).filter((x) => x.n);
 
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     rows, byPosition, bySector, byBand,
     medianBefore: A.med(withPay.map((x) => x.before!)),
     medianOffer: A.med(withPay.map((x) => x.offered)),
@@ -386,6 +432,8 @@ export function quality(c: InsightsContext) {
   const filterThin = <T extends { decided: number }>(xs: T[]) => xs.filter((x) => x.decided >= 2);
 
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     rate: decided.length ? passed.length / decided.length : null,
     prevRate: prevDec.length ? prevPassed.length / prevDec.length : null,
     hired: inWin.length,
@@ -456,6 +504,8 @@ export function offers(c: InsightsContext) {
     ((a.open ? '0' : '1') + (a.lastAt ?? '')).localeCompare((b.open ? '0' : '1') + (b.lastAt ?? '')));
 
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     sent: sent.length,
     accepted: acc.length,
     declined: dec.length,
@@ -499,6 +549,8 @@ export function budget(c: InsightsContext) {
     .filter((a) => c.jobsById.get(a.jobId)?.budgeted === false).length;
 
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     live: live.length,
     openings: A.sum(live.map((j) => j.openings)),
     inPlan: inPlan.length,
@@ -595,6 +647,8 @@ export async function interviewerReport(
   for (const i of done) for (const t of i.improve) slipCount[t] = (slipCount[t] ?? 0) + 1;
 
   return {
+    /* Where a mark on this tab lands. See drillScope. */
+    scope: drillScope(c),
     held: list.length,
     reviewed: done.length,
     median,

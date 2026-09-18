@@ -2,7 +2,7 @@ import 'server-only';
 import { sql } from 'drizzle-orm';
 import { db, type Exec } from '@/db/client';
 import {
-  candidates, applications, jobs, jobStages, candidateSkills, staff,
+  candidates, applications, applicationStageHistory, jobs, jobStages, candidateSkills, staff,
   talentPools, talentPoolMembers, evaluations, hashtags as hashtagTable, sources as sourceTable,
 } from '@/db/schema';
 import { rows as rowsOf, count as countOf } from './sql';
@@ -37,12 +37,78 @@ export type CandidateFilters = {
   stage?: string;
   source?: string;
   ownerId?: string;
+  /** Owned by them or sourced by them. */
+  touchedBy?: string;
   held?: string;      // '' | mine | others | free | any
   tags?: string[];
   poolId?: string;
   sort?: string;
   limit?: number;
+
+  /* ── Where a chart lands ───────────────────────────────────────────────────
+     A mark on a chart stands for a set of APPLICATIONS, and clicking it has to
+     produce that set and no other. These are what make that possible, and they
+     are deliberately the same words the charts' own queries use, so the two can
+     be checked against each other rather than hoped about.
+
+     `apps` lists applications rather than people. The pipeline and hired tabs
+     already do; this is what lets "All candidates" do it too, for a mark that
+     counts applications regardless of what became of them. */
+  apps?: boolean;
+
+  /* The period, and which date it is about:
+       applied  the application arrived inside it          (the default)
+       closed   it was closed inside it — a hire, a regret
+       inplay   it was open at some point inside it, counted at the stage it
+                had reached by the end — the Overview's pipeline of a period
+       touched  it arrived inside it, or closed inside it, or is still open —
+                what a period is allowed to talk about on the reports, and the
+                same predicate `scopeOf` uses in the analytics layer */
+  from?: string;
+  to?: string;
+  /* The same window to the instant rather than to the day. Several reports
+     count by the clock — "the last 180 days" means 180 x 24 hours, not 181
+     calendar days — and a drill-down off by one boundary is a drill-down that
+     disagrees with the chart it came from. When these are given they replace
+     `from`/`to` entirely. */
+  fromAt?: string;
+  toAt?: string;
+  win?: 'applied' | 'closed' | 'inplay' | 'touched';
+
+  /* Stages, as a set. Under `inplay` these are matched against the stage the
+     application had reached by `to`, not the stage it is at now. */
+  stages?: string[];
+
+  /* Reached this stage at any point, from the stage history — which is what a
+     funnel step counts. `sourced` folds into `applied`, as the funnel does. */
+  reached?: string;
+
+  /* Several sources, for a mark that groups the tail of a ranking into
+     "Other" — it stands for those channels and has to land on them. */
+  sources?: string[];
+
+  statuses?: string[];
+  /** Live, and past the SLA of the stage it is standing in. */
+  overSla?: boolean;
+  deptId?: string;
+  /* Several departments, for a mark that groups the tail of a ranking. */
+  deptIds?: string[];
+  jobId?: string;
 };
+
+/* The stage an application had reached by a date: its last move on or before
+   that date, or the stage it sits at if it never moved. Closed applications
+   are read at the stage they left from. This is the Overview's own definition,
+   written once so a drill-down cannot drift from the chart it came from. */
+const stageAsAt = (alias: string, to: string) => sql`
+  coalesce(
+    (SELECT h.to_stage::text FROM ${applicationStageHistory} h
+      WHERE h.application_id = ${sql.raw(alias)}.id
+        AND h.at::date <= (CASE WHEN ${sql.raw(alias)}.closed_at IS NOT NULL
+                                 AND ${sql.raw(alias)}.closed_at::date < ${to}::date
+                                THEN ${sql.raw(alias)}.closed_at::date ELSE ${to}::date END)
+      ORDER BY h.at::date DESC, h.seq DESC LIMIT 1),
+    ${sql.raw(alias)}.stage::text)`;
 
 export type CandidateRow = {
   candidateId: string;
@@ -94,9 +160,84 @@ export async function listCandidates(
       OR EXISTS (SELECT 1 FROM unnest(c.hashtags) h WHERE h ILIKE ${q}))`);
   }
   if (f.family) where.push(sql`c.family = ${f.family}`);
-  if (f.stage) where.push(sql`l.stage = ${f.stage}::stage_key`);
-  if (f.source) where.push(sql`l.source = ${f.source}`);
+  const srcs = (f.sources?.length ? f.sources : f.source ? [f.source] : []).filter(Boolean);
+  if (srcs.length) {
+    where.push(sql`l.source IN (${sql.join(srcs.map((s) => sql`${s}`), sql`, `)})`);
+  }
   if (f.ownerId) where.push(sql`l.recruiter_id = ${f.ownerId}`);
+  /* Owned OR sourced. A sourcer's own pipeline is the applications they brought
+     in as well as any they carry, and the reports count it that way. */
+  if (f.touchedBy) {
+    where.push(sql`(l.recruiter_id = ${f.touchedBy} OR l.sourcer_id = ${f.touchedBy})`);
+  }
+
+  /* ── What a chart handed over ─────────────────────────────────────────────*/
+  const win = f.win ?? 'applied';
+  if (f.fromAt && f.toAt) {
+    const col = win === 'closed' ? sql`l.closed_at` : sql`l.applied_at`;
+    if (win === 'inplay') {
+      where.push(sql`l.applied_at <= ${f.toAt}::timestamptz`);
+      where.push(sql`(l.closed_at IS NULL OR l.closed_at >= ${f.fromAt}::timestamptz)`);
+    } else if (win === 'touched') {
+      where.push(sql`(
+        (l.applied_at >= ${f.fromAt}::timestamptz AND l.applied_at <= ${f.toAt}::timestamptz)
+        OR (l.closed_at >= ${f.fromAt}::timestamptz AND l.closed_at <= ${f.toAt}::timestamptz)
+        OR l.status IN ('active','on_hold'))`);
+    } else {
+      where.push(sql`${col} >= ${f.fromAt}::timestamptz AND ${col} <= ${f.toAt}::timestamptz`);
+    }
+  } else if (f.from && f.to) {
+    if (win === 'closed') {
+      where.push(sql`l.closed_at::date BETWEEN ${f.from}::date AND ${f.to}::date`);
+    } else if (win === 'inplay') {
+      /* Open at some point inside the period: applied by the end of it and not
+         already closed before it began. */
+      where.push(sql`l.applied_at::date <= ${f.to}::date`);
+      where.push(sql`(l.closed_at IS NULL OR l.closed_at::date >= ${f.from}::date)`);
+    } else if (win === 'touched') {
+      where.push(sql`(l.applied_at::date BETWEEN ${f.from}::date AND ${f.to}::date
+        OR l.closed_at::date BETWEEN ${f.from}::date AND ${f.to}::date
+        OR l.status IN ('active','on_hold'))`);
+    } else {
+      where.push(sql`l.applied_at::date BETWEEN ${f.from}::date AND ${f.to}::date`);
+    }
+  }
+
+  /* Stage, as a set. One stage or several reads the same way, so a chart whose
+     mark groups stages together — Screening is screen and assessment — lands on
+     exactly the people it counted. */
+  const stages = (f.stages?.length ? f.stages : f.stage ? [f.stage] : []).filter(Boolean);
+  if (stages.length) {
+    const list = sql.join(stages.map((s) => sql`${s}`), sql`, `);
+    const asAt = f.to ?? (f.toAt ? String(f.toAt).slice(0, 10) : null);
+    where.push(win === 'inplay' && asAt
+      ? sql`${stageAsAt('l', asAt)} IN (${list})`
+      : sql`l.stage::text IN (${list})`);
+  }
+
+  if (f.reached) {
+    where.push(sql`EXISTS (SELECT 1 FROM ${applicationStageHistory} h
+      WHERE h.application_id = l.id
+        AND (CASE WHEN h.to_stage::text = 'sourced' THEN 'applied' ELSE h.to_stage::text END)
+            = ${f.reached})`);
+  }
+
+  /* Past the SLA of the stage they are standing in, right now — the same test
+     the reports use, against the same `job_stages` row. */
+  if (f.overSla) {
+    where.push(sql`l.status IN ('active','on_hold')
+      AND ${at(clock)} - l.stage_entered_at > (coalesce(js.sla, 5) || ' days')::interval`);
+  }
+
+  if (f.statuses?.length) {
+    where.push(sql`l.status::text IN (${sql.join(f.statuses.map((s) => sql`${s}`), sql`, `)})`);
+  }
+  const depts = (f.deptIds?.length ? f.deptIds : f.deptId ? [f.deptId] : []).filter(Boolean);
+  if (depts.length) {
+    where.push(sql`EXISTS (SELECT 1 FROM ${jobs} j WHERE j.id = l.job_id
+      AND j.dept_id IN (${sql.join(depts.map((x) => sql`${x}`), sql`, `)}))`);
+  }
+  if (f.jobId) where.push(sql`l.job_id = ${f.jobId}`);
   if (f.tags?.length) {
     where.push(sql`c.hashtags @> ${sql`ARRAY[${sql.join(f.tags.map((t) => sql`${t}`), sql`, `)}]::text[]`}`);
   }
@@ -135,7 +276,7 @@ export async function listCandidates(
      a list of PEOPLE, each shown through their live application if they have
      one and their most recent otherwise. The prototype drew the same
      distinction, and the counts on the tab strip depend on it. */
-  const perApplication = f.tab === 'pipeline' || f.tab === 'hired';
+  const perApplication = f.tab === 'pipeline' || f.tab === 'hired' || !!f.apps;
   const lateral = perApplication
     ? sql`JOIN ${applications} l ON l.candidate_id = c.id AND l.job_id IN ${scopedJobs} AND ${pickFor('l')}`
     : sql`

@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Card, Kpi, Bar, Table, Avatar, type Column } from '@/components/ui/primitives';
-import { Rings, HBars } from '@/components/charts';
+import { Rings, HBars, type Pick } from '@/components/charts';
+import { applicationsUrl } from '@/lib/charts/drill';
+import type { DrillScope } from '@/lib/queries/insights';
 import { fmt } from '@/lib/format';
 import type { RecruiterStat } from '@/lib/queries/analytics';
 
@@ -42,10 +44,14 @@ const med = (xs: number[]) => {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
 
-export function Recruiters({ rows, sortKey, sortDir }: {
+export function Recruiters({ rows, sortKey, sortDir, scope }: {
   rows: RecruiterRow[]; sortKey: string; sortDir: 1 | -1;
+  /* The period and department the page is reading, so a bar lands on the same
+     set it was counted from. See drillScope. */
+  scope: DrillScope;
 }) {
   const lead = rows.find((x) => x.person.role === 'tal_lead');
+  const ranked = [...rows].filter((x) => x.target || x.hires).sort((a, b) => b.hires - a.hires);
   const sum = (f: (r: RecruiterRow) => number) => rows.reduce((n, r) => n + f(r), 0);
 
   const cols: Array<Column<RecruiterRow>> = [
@@ -131,21 +137,58 @@ export function Recruiters({ rows, sortKey, sortDir }: {
       <div className="grid g-2" style={{ marginBottom: 14 }}>
         <Card title="Attainment against target"
           sub={<>Hires in the period as a share of each recruiter&rsquo;s pro-rated target. Click a ring.</>}>
-          <Rings items={rows.filter((x) => x.target).map((x) => ({
-            name: `${fmt.first(x.person.name)} ${(x.person.name.split(' ')[1] ?? '').slice(0, 1)}.`,
-            value: Math.min(1.5, x.attainment ?? 0),
-            label: fmt.pct(x.attainment ?? 0),
-            sub: `${fmt.int(x.hires)} of ${fmt.int(x.target)}`,
-            title: `${x.person.name}: ${fmt.pct(x.attainment ?? 0)}`,
-            act: 'go', v: `/team/${x.person.id}`,
-          }))} />
+          <Rings
+            items={rows.filter((x) => x.target).map((x) => ({
+              name: `${fmt.first(x.person.name)} ${(x.person.name.split(' ')[1] ?? '').slice(0, 1)}.`,
+              value: Math.min(1.5, x.attainment ?? 0),
+              label: fmt.pct(x.attainment ?? 0),
+              sub: `${fmt.int(x.hires)} of ${fmt.int(x.target)}`,
+              title: `${x.person.name}: ${fmt.pct(x.attainment ?? 0)}`,
+            }))}
+            /* A ring opens the recruiter, not a list. */
+            picks={rows.filter((x) => x.target).map((x): Pick => ({
+              act: 'go', v: `/team/${x.person.id}`, opens: 'record',
+              tip: {
+                label: x.person.name,
+                value: fmt.pct(x.attainment ?? 0),
+                rows: [
+                  ['Hires in the period', fmt.int(x.hires)],
+                  ['Pro-rated target', fmt.int(x.target)],
+                  ['Live pipeline', fmt.int(x.livePipeline)],
+                ],
+                action: `Open ${fmt.first(x.person.name)}'s record`,
+              },
+            }))} />
         </Card>
 
         <Card title="Hires, with the target marked"
           sub="One bar per recruiter; the tick is their pro-rated target for the period.">
-          <HBars data={[...rows].filter((x) => x.target || x.hires)
-            .sort((a, b) => b.hires - a.hires)
-            .map((x) => ({
+          <HBars
+            /* The bar is the hires they closed inside the period, so the list
+               behind it is exactly those applications. */
+            picks={ranked.map((x): Pick => ({
+              ...(x.hires
+                ? {
+                  act: 'go',
+                  v: applicationsUrl({
+                    tab: 'hired', win: 'closed', ...scope, ownerId: x.person.id,
+                  }),
+                }
+                : {}),
+              tip: {
+                label: x.person.name,
+                value: `${fmt.int(x.hires)} hire${x.hires === 1 ? '' : 's'}`,
+                rows: [
+                  ['Pro-rated target', fmt.int(x.target)],
+                  ['Against target', x.attainment == null ? '—' : fmt.pct(x.attainment)],
+                  ['Median time to hire', x.hires ? `${Math.round(x.timeToHire)} days` : '—'],
+                ],
+                ...(x.hires
+                  ? { action: `Open ${fmt.int(x.hires)} hire${x.hires === 1 ? '' : 's'}` }
+                  : {}),
+              },
+            }))}
+            data={ranked.map((x) => ({
               label: x.person.name, value: x.hires, marker: x.target,
               markerLabel: `target ${fmt.int(x.target)}`,
               note: x.attainment != null ? fmt.pct(x.attainment) : '',

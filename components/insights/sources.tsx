@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Card, Kpi, Bar, Table, Banner, type Column } from '@/components/ui/primitives';
-import { Pie, Legend, HBars } from '@/components/charts';
+import { Pie, Legend, HBars, type Pick, type Picks } from '@/components/charts';
+import { applicationsUrl } from '@/lib/charts/drill';
+import type { DrillScope } from '@/lib/queries/insights';
 import { RAMP } from '@/lib/charts/palette';
 import { fmt } from '@/lib/format';
 import type { SourceRow } from '@/lib/queries/analytics';
@@ -17,6 +19,7 @@ export type SourcesData = {
      a thin channel with one lucky hire must not win the comparison. */
   floor: number;
   costPerHireGoal: number | null;
+  scope: DrillScope;
 };
 
 export function Sources({ d }: { d: SourcesData }) {
@@ -36,6 +39,65 @@ export function Sources({ d }: { d: SourcesData }) {
     ...(rest ? [{ label: 'Other channels', value: rest, hires: mix.slice(4).reduce((n, m) => n + m.hires, 0) }] : []),
   ];
   const tot = segs.reduce((n, x) => n + x.value, 0) || 1;
+
+  /* Everything on this tab counts the applications the period is allowed to
+     talk about — arrived in it, closed in it, or still open — which is what
+     `win: 'touched'` means. The same window, the same department scope. */
+  const on = { tab: 'all' as const, apps: true, win: 'touched' as const, ...d.scope };
+
+  const restNames = mix.slice(4).map((m) => m.source);
+  const mixPicks: Picks = segs.map((x, i) => {
+    const isOther = i >= top.length;
+    return {
+      act: 'go',
+      v: applicationsUrl({ ...on, ...(isOther ? { sources: restNames } : { source: top[i].source }) }),
+      tip: {
+        label: x.label,
+        value: `${fmt.int(x.value)} application${x.value === 1 ? '' : 's'}`,
+        rows: [
+          ['Share of the period', fmt.pct(x.value / tot)],
+          ['Joined from it', fmt.int(x.hires)],
+          ...(isOther ? [['Channels', fmt.int(restNames.length)] as [string, string]] : []),
+        ],
+        action: `Open ${fmt.int(x.value)} application${x.value === 1 ? '' : 's'}`,
+      },
+    };
+  });
+
+  const volumePicks: Picks = mix.map((s): Pick => ({
+    act: 'go',
+    v: applicationsUrl({ ...on, source: s.source }),
+    tip: {
+      label: s.source,
+      value: `${fmt.int(s.applications)} application${s.applications === 1 ? '' : 's'}`,
+      rows: [
+        ['Reached an interview', fmt.int(s.interviewed)],
+        ['Joined', fmt.int(s.hires)],
+        ['Application to hire', fmt.pct(s.conv, 1)],
+      ],
+      action: `Open ${fmt.int(s.applications)} application${s.applications === 1 ? '' : 's'}`,
+    },
+  }));
+
+  /* The conversion chart is a rate, so it says how many its list will hold. */
+  const byConv = [...mix].sort((a, b) => b.conv - a.conv);
+  const convPicks: Picks = byConv.map((s): Pick => ({
+    act: 'go',
+    v: applicationsUrl({ ...on, source: s.source }),
+    n: s.applications,
+    tip: {
+      label: s.source,
+      value: fmt.pct(s.conv, 1),
+      rows: [
+        ['Hires', fmt.int(s.hires)],
+        ['Out of', `${fmt.int(s.applications)} applications`],
+      ],
+      ...(s.applications < floor
+        ? { note: `Fewer than ${floor} applications — the rate is real, the sample is thin.` }
+        : {}),
+      action: `Open ${fmt.int(s.applications)} application${s.applications === 1 ? '' : 's'}`,
+    },
+  }));
 
   const cols: Array<Column<SourceRow>> = [
     { t: 'Source', f: (s) => <b>{s.source}</b> },
@@ -75,8 +137,9 @@ export function Sources({ d }: { d: SourcesData }) {
       <Card title="Share of applications by channel"
         sub="The four biggest channels and everything else, for the period.">
         <div className="pie-row">
-          <Pie segments={segs.map((s) => ({ label: s.label, value: s.value }))} size={220} />
-          <Legend items={segs.map((x, i) => ({
+          <Pie segments={segs.map((s) => ({ label: s.label, value: s.value }))} size={220}
+            picks={mixPicks} />
+          <Legend picks={mixPicks} items={segs.map((x, i) => ({
             color: RAMP[i % RAMP.length], label: x.label,
             value: `${fmt.pct(x.value / tot)} · ${fmt.int(x.hires)} hired`,
           }))} />
@@ -86,7 +149,7 @@ export function Sources({ d }: { d: SourcesData }) {
       <div className="grid g-2" style={{ marginTop: 14 }}>
         <Card title="Volume by channel"
           sub="Applications in the period, ranked. One hue: this is magnitude, not category.">
-          <HBars data={mix.map((s) => ({
+          <HBars picks={volumePicks} data={mix.map((s) => ({
             label: s.source, value: s.applications,
             note: s.hires ? `${fmt.int(s.hires)} hired` : 'no hires',
           }))} />
@@ -102,8 +165,8 @@ export function Sources({ d }: { d: SourcesData }) {
                 : `Every channel here carries at least ${floor} applications in this period, so the rates are all worth acting on.`}
             </span>
           }>
-          <HBars format="pctWhole1"
-            data={[...mix].sort((a, b) => b.conv - a.conv).map((s) => ({
+          <HBars format="pctWhole1" picks={convPicks}
+            data={byConv.map((s) => ({
               label: s.source,
               value: Math.round(s.conv * 1000) / 10,
               note: `${fmt.int(s.hires)} of ${fmt.int(s.applications)}`,

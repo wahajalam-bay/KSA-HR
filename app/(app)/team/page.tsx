@@ -1,4 +1,6 @@
 import { chrome, q } from '@/lib/queries/chrome';
+import { DrillChips } from '@/components/charts/chips';
+import { TEAM_ROLES } from '@/lib/domain/team';
 import { teamList } from '@/lib/queries/team';
 import { TopBar } from '@/components/app/shell';
 import { Btn } from '@/components/ui/primitives';
@@ -52,7 +54,10 @@ export default async function TeamPage({ searchParams }: {
 
       <main className="view" id="view">
         <TeamFilters win={String(w.days)} role={role} counts={d.roleCounts} />
-        <TeamBoard d={d} role={role} win={w} />
+        <DrillChips sp={sp} path="/team" chips={role
+          ? [{ key: 'role', label: 'Role', value: TEAM_ROLES.find((x) => x.v === role)?.t ?? role }]
+          : []} />
+        <TeamBoard d={d} role={role} win={w} now={now} />
       </main>
     </>
   );

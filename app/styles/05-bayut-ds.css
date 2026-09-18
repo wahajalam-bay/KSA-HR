@@ -513,3 +513,134 @@ tbody tr[data-act]:active td{ background:var(--active-bg) }
   .side [data-tip]::after,
   .side [data-tip]::before{ content:none }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CHART INTERACTION
+
+   Marks that do something say so, marks that do not stay quiet, and the
+   resting state is exactly what it was — every rule here is a hover, a focus
+   or a selection. A chart nobody is pointing at looks the way it always did.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Not every chart is an SVG. A funnel, a stacked rail, a heatmap, a ring tile
+   and a legend are ordinary elements, so the rules below name each container
+   that can hold marks rather than assuming `.chart` — which only ChartFrame,
+   and therefore only the drawn charts, puts on the page. */
+
+.cmk{
+  transition:opacity .16s var(--ease, ease), filter .16s var(--ease, ease);
+}
+
+/* A mark that acts. Only these get the pointer — an informational mark keeps
+   the ordinary cursor, because something that looks clickable and is not is
+   worse than something plainly inert. */
+.pickable{ cursor:pointer }
+.pickable:focus{ outline:none }
+.pickable:focus-visible{
+  outline:2px solid var(--brand-500); outline-offset:2px; border-radius:4px;
+}
+.pickable:hover,
+.pickable:focus-visible{ filter:brightness(1.06) saturate(1.04) }
+
+/* Hover and keyboard focus are the same state: the mark keeps its colour and
+   everything else in the same chart steps back, so the eye lands on it without
+   anything moving. `:has` scopes that to the one chart being pointed at —
+   hovering a bar in Overview must not dim the funnel beside it. */
+.chart:has(.pickable:hover) .cmk:not(:hover),
+.chart:has(.pickable:focus-visible) .cmk:not(:focus-visible),
+.stk:has(.pickable:hover) .cmk:not(:hover),
+.stk:has(.pickable:focus-visible) .cmk:not(:focus-visible),
+.rings:has(.pickable:hover) .cmk:not(:hover),
+.rings:has(.pickable:focus-visible) .cmk:not(:focus-visible),
+.heat:has(.pickable:hover) .cmk:not(:hover),
+.heat:has(.pickable:focus-visible) .cmk:not(:focus-visible){ opacity:.45 }
+
+/* A horizontal bar and a funnel step are one mark drawn as three cells of a
+   grid — the name, the bar and the figure — and CSS has no way to say "the
+   other two cells of this row". Dimming everything the pointer is not directly
+   on would therefore tear the hovered row in half, which looks like a fault
+   rather than a focus. So these two dim nothing: the row brightens, the tooltip
+   opens, and that is enough to say which one is meant. */
+.hbar .cmk:hover,
+.fnl .cmk:hover{ filter:brightness(1.06) saturate(1.04) }
+
+/* A selected mark stays lifted with nothing hovered, so the page still says
+   what it is filtered by after the pointer has gone. */
+.cmk.on{ opacity:1 }
+.chart:has(.cmk.on) .cmk:not(.on):not(:hover),
+.stk:has(.cmk.on) .cmk:not(.on):not(:hover),
+.rings:has(.cmk.on) .cmk:not(.on):not(:hover),
+.heat:has(.cmk.on) .cmk:not(.on):not(:hover){ opacity:.5 }
+
+/* A legend row is a mark like any other. */
+.legend .pickable{ border-radius:var(--r-xs); padding:2px 5px; margin:-2px -5px }
+.legend .pickable:hover{ background:var(--hover-bg) }
+.legend .pickable:focus-visible{ outline:none; box-shadow:var(--focus-ring) }
+.legend .cmk.on{ background:var(--brand-tint); color:var(--selected-ink); font-weight:700 }
+
+/* A selected slice, cell or segment needs to read as chosen without a colour
+   change — the palette carries meaning. An outline does that. */
+.heat .cmk.on{ box-shadow:inset 0 0 0 2px var(--brand-600) }
+.stk .cmk.on{ box-shadow:inset 0 0 0 2px var(--surface) }
+.chart .cmk.on rect,
+.chart .cmk.on circle{ stroke:var(--brand-700, #063d24); stroke-width:2 }
+
+@media (prefers-reduced-motion:reduce){
+  .cmk{ transition:none }
+}
+
+/* ── The tooltip ──────────────────────────────────────────────────
+   Fixed, so no chart's overflow can clip it, and translated by placement so
+   the box sits beside the mark rather than on it. */
+.ctip{
+  position:fixed; z-index:120; pointer-events:none;
+  max-width:280px; min-width:120px;
+  padding:9px 11px 8px;
+  border-radius:var(--r-sm);
+  background:var(--surface); color:var(--ink);
+  box-shadow:0 16px 40px -12px rgba(6,61,36,.34), 0 0 0 1px var(--sep);
+  font-size:12.5px; line-height:1.35;
+  animation:ctip-in .13s var(--ease-out, ease-out);
+}
+.ctip[data-place="top"]{ transform:translate(-50%,-100%) }
+.ctip[data-place="bottom"]{ transform:translate(-50%,0) }
+.ctip[data-place="left"]{ transform:translate(-100%,-50%) }
+.ctip[data-place="right"]{ transform:translate(0,-50%) }
+
+@keyframes ctip-in{ from{ opacity:0 } to{ opacity:1 } }
+@media (prefers-reduced-motion:reduce){ .ctip{ animation:none } }
+
+.ctip-l{ display:block; font-size:12.5px; font-weight:700; letter-spacing:-.01em }
+.ctip-v{
+  display:block; margin-top:1px;
+  font-size:17px; font-weight:800; letter-spacing:-.02em; color:var(--brand-500);
+}
+.ctip-rows{
+  display:grid; grid-template-columns:auto auto; gap:1px 12px;
+  margin:6px 0 0; padding:6px 0 0; border-top:1px solid var(--sep);
+}
+.ctip-rows dt{ color:var(--ink-3); font-size:11.5px }
+.ctip-rows dd{ margin:0; text-align:right; font-weight:600; font-size:11.5px }
+.ctip-note{ margin:6px 0 0; color:var(--ink-3); font-size:11.5px }
+.ctip-act{
+  margin:6px 0 0; padding-top:6px; border-top:1px solid var(--sep);
+  color:var(--brand-500); font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em;
+}
+
+/* ── The filter chips a selection leaves behind ─────────────────────── */
+.cfilters{ display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:0 0 12px }
+.cfilters .t-over{ margin-right:1px }
+.cfilter{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 6px 4px 10px; border-radius:var(--r-pill);
+  background:var(--brand-tint); color:var(--selected-ink);
+  font-size:12px; font-weight:650;
+}
+.cfilter b{ font-weight:800 }
+.cfilter button{
+  display:grid; place-items:center; width:18px; height:18px;
+  border-radius:99px; color:inherit; opacity:.7;
+}
+.cfilter button:hover{ background:rgba(0,0,0,.08); opacity:1 }
+.cfilter button:focus-visible{ outline:none; box-shadow:var(--focus-ring) }

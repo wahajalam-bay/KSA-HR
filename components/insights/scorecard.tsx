@@ -1,9 +1,26 @@
 import * as React from 'react';
 import { Card, Kpi, Empty, Bar, Table, type Column } from '@/components/ui/primitives';
-import { Bars, Line, Funnel, Waves, Pie, Legend, Spark } from '@/components/charts';
+import {
+  Bars, Line, Legend, Funnel, Pie, Waves, Spark, type Pick, type Picks, type Picks2,
+} from '@/components/charts';
+import { applicationsUrl, interviewsUrl } from '@/lib/charts/drill';
+
+/* A calendar month, as the two ends a drill-down needs. The monthly series on
+   this tab are grouped by the UTC month of the record's own date, so these are
+   the exact edges of what each point counted. */
+const monthDays = (month: string) => {
+  const [y, m] = month.split('-').map(Number);
+  return {
+    from: `${month}-01`,
+    to: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10),
+    fromAt: new Date(Date.UTC(y, m - 1, 1)).toISOString(),
+    toAt: new Date(Date.UTC(y, m, 1) - 1).toISOString(),
+  };
+};
 import { CAT, RAMP } from '@/lib/charts/palette';
 import { fmt } from '@/lib/format';
 import type { MonthRow, FunnelRow } from '@/lib/queries/analytics';
+import type { DrillScope } from '@/lib/queries/insights';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The hiring scorecard: the five numbers a monthly review opens with, then the
@@ -28,6 +45,7 @@ export type ScorecardData = {
   funnel: FunnelRow[];
   offerStates: Array<{ label: string; value: number; color?: string }>;
   offersTotal: number;
+  scope: DrillScope;
   today: string;
 };
 
@@ -87,7 +105,32 @@ export function Scorecard({ d }: { d: ScorecardData }) {
             </span>
           }>
           <Bars data={m12.map((m) => ({ label: m.label, value: m.hires, target: m.target }))}
-            h={250} labelMax={6} />
+            h={250} labelMax={6}
+            /* Twelve months regardless of the period, so each bar carries its
+               own month rather than the period control's dates. */
+            picks={m12.map((m): Pick => ({
+              ...(m.hires
+                ? {
+                  act: 'go',
+                  v: applicationsUrl({
+                    tab: 'hired', win: 'closed',
+                    from: monthDays(m.month).from, to: monthDays(m.month).to,
+                    deptId: d.scope.deptId,
+                  }),
+                }
+                : {}),
+              tip: {
+                label: m.label,
+                value: m.hires ? `${fmt.int(m.hires)} hire${m.hires === 1 ? '' : 's'}` : 'no hires',
+                rows: [
+                  ['Plan for the month', fmt.int(m.target)],
+                  ['Against plan', m.target ? fmt.pct(m.hires / m.target) : '\u2014'],
+                ],
+                ...(m.hires
+                  ? { action: `Open ${fmt.int(m.hires)} hire${m.hires === 1 ? '' : 's'}` }
+                  : {}),
+              },
+            }))} />
         </Card>
 
         <Card title="Applications and interviews"
@@ -100,7 +143,48 @@ export function Scorecard({ d }: { d: ScorecardData }) {
           <Line series={[
             { name: 'Applications', color: CAT[0], points: m12.map((m) => ({ x: m.label, y: m.applications })) },
             { name: 'Interviews', color: CAT[1], points: m12.map((m) => ({ x: m.label, y: m.interviews })) },
-          ]} h={250} />
+          ]} h={250}
+            /* [series][month]. Applications are applications; interviews are
+               interviews, and they live on different pages. */
+            picks={[
+              m12.map((m): Pick => ({
+                ...(m.applications
+                  ? {
+                    act: 'go',
+                    v: applicationsUrl({
+                      tab: 'all', apps: true, win: 'applied',
+                      from: monthDays(m.month).from, to: monthDays(m.month).to,
+                      deptId: d.scope.deptId,
+                    }),
+                  }
+                  : {}),
+                tip: {
+                  label: `${m.label} \u00b7 applications`,
+                  value: fmt.int(m.applications),
+                  ...(m.applications
+                    ? { action: `Open ${fmt.int(m.applications)} application${m.applications === 1 ? '' : 's'}` }
+                    : {}),
+                },
+              })),
+              m12.map((m): Pick => ({
+                ...(m.interviews
+                  ? {
+                    act: 'go',
+                    v: interviewsUrl({
+                      fromAt: monthDays(m.month).fromAt, toAt: monthDays(m.month).toAt,
+                    }),
+                  }
+                  : {}),
+                tip: {
+                  label: `${m.label} \u00b7 interviews`,
+                  value: fmt.int(m.interviews),
+                  note: 'Interviews are counted across the whole desk, whatever department is selected.',
+                  ...(m.interviews
+                    ? { action: `Open ${fmt.int(m.interviews)} interview${m.interviews === 1 ? '' : 's'}` }
+                    : {}),
+                },
+              })),
+            ] satisfies Picks2} />
           <Legend items={[
             { color: CAT[0], label: 'Applications', value: fmt.int(m12.reduce((n, m) => n + m.applications, 0)) },
             { color: CAT[1], label: 'Interviews', value: fmt.int(m12.reduce((n, m) => n + m.interviews, 0)) },
@@ -118,7 +202,20 @@ export function Scorecard({ d }: { d: ScorecardData }) {
               <b>{fmt.pct(offered ? joined / offered : 0)}</b> offer to joined.
             </span>
           }>
-          <Funnel rows={d.funnel} />
+          <Funnel rows={d.funnel} picks={d.funnel.map((r): Pick | null => (r.n
+            ? {
+              act: 'go',
+              v: applicationsUrl({
+                tab: 'all', apps: true, win: 'touched', ...d.scope, reached: r.key,
+              }),
+              tip: {
+                label: r.name,
+                value: fmt.int(r.n),
+                rows: [['Of everyone who applied', fmt.pct(r.convFromTop)]],
+                action: `Open ${fmt.int(r.n)} application${r.n === 1 ? '' : 's'}`,
+              },
+            }
+            : null))} />
         </Card>
 
         <Card title="Quality of hire"
@@ -173,7 +270,61 @@ export function Scorecard({ d }: { d: ScorecardData }) {
             { name: 'Interviews', points: m12.map((m) => ({ x: m.label.split(' ')[0], y: m.interviews })) },
             { name: 'Offers sent', points: m12.map((m) => ({ x: m.label.split(' ')[0], y: m.offersSent })) },
             { name: 'Hires', points: m12.map((m) => ({ x: m.label.split(' ')[0], y: m.hires })) },
-          ]} h={260} />
+          ]} h={260}
+            /* The same four series as the cards above, so the same
+               destinations. Offers sent has no list of its own that counts by
+               the month it was sent, so that sheet explains itself. */
+            picks={[
+              m12.map((m): Pick => ({
+                ...(m.applications
+                  ? {
+                    act: 'go',
+                    v: applicationsUrl({
+                      tab: 'all', apps: true, win: 'applied',
+                      from: monthDays(m.month).from, to: monthDays(m.month).to,
+                      deptId: d.scope.deptId,
+                    }),
+                  }
+                  : {}),
+                tip: {
+                  label: `${m.label} \u00b7 applications`, value: fmt.int(m.applications),
+                  ...(m.applications ? { action: `Open ${fmt.int(m.applications)}` } : {}),
+                },
+              })),
+              m12.map((m): Pick => ({
+                ...(m.interviews
+                  ? {
+                    act: 'go',
+                    v: interviewsUrl({
+                      fromAt: monthDays(m.month).fromAt, toAt: monthDays(m.month).toAt,
+                    }),
+                  }
+                  : {}),
+                tip: {
+                  label: `${m.label} \u00b7 interviews`, value: fmt.int(m.interviews),
+                  ...(m.interviews ? { action: `Open ${fmt.int(m.interviews)}` } : {}),
+                },
+              })),
+              m12.map((m): Pick => ({
+                tip: { label: `${m.label} \u00b7 offers sent`, value: fmt.int(m.offersSent) },
+              })),
+              m12.map((m): Pick => ({
+                ...(m.hires
+                  ? {
+                    act: 'go',
+                    v: applicationsUrl({
+                      tab: 'hired', win: 'closed',
+                      from: monthDays(m.month).from, to: monthDays(m.month).to,
+                      deptId: d.scope.deptId,
+                    }),
+                  }
+                  : {}),
+                tip: {
+                  label: `${m.label} \u00b7 hires`, value: fmt.int(m.hires),
+                  ...(m.hires ? { action: `Open ${fmt.int(m.hires)}` } : {}),
+                },
+              })),
+            ] satisfies Picks2} />
           <Legend items={[
             { color: RAMP[0], label: 'Applications', value: fmt.int(m12.reduce((n, m) => n + m.applications, 0)) },
             { color: RAMP[1], label: 'Interviews', value: fmt.int(m12.reduce((n, m) => n + m.interviews, 0)) },

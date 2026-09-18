@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { Card, Kpi, Chip, Empty, Seg, Avatar, Btn } from '@/components/ui/primitives';
 import { Icon } from '@/components/ui/icons';
-import { Pie, Legend, Rings, HBars } from '@/components/charts';
+import { Pie, Legend, Rings, HBars, type Pick, type Picks } from '@/components/charts';
+import { applicationsUrl } from '@/lib/charts/drill';
 import { RAMP } from '@/lib/charts/palette';
 import { fmt } from '@/lib/format';
 import { TEAM_ROLES, roleDef, carriesTarget } from '@/lib/domain/team';
@@ -89,16 +90,37 @@ function PersonCard({ person, stat, support }: {
   );
 }
 
-export function TeamBoard({ d, role, win }: { d: TeamList; role: string; win: W.Window }) {
+export function TeamBoard({ d, role, win, now }: {
+  d: TeamList; role: string; win: W.Window;
+  /* The stats on this page are counted by the clock rather than the calendar,
+     so a drill-down needs the same instant the page was drawn at. */
+  now: Date;
+}) {
   const team = d.people;
   const hiringPeople = team.filter(carriesTarget);
   const shown = team.filter((p) => !role || p.role === role);
   const period = W.label(win).toLowerCase();
 
   const segs = TEAM_ROLES
-    .map((x) => ({ label: x.t, value: d.roleCounts.get(x.v) ?? 0 }))
+    .map((x) => ({ key: x.v, label: x.t, value: d.roleCounts.get(x.v) ?? 0 }))
     .filter((x) => x.value)
     .sort((a, b) => b.value - a.value);
+  const headcount = segs.reduce((n, x) => n + x.value, 0) || 1;
+  const rolePicks: Picks = segs.map((x) => ({
+    act: 'go',
+    v: `/team?role=${encodeURIComponent(x.key)}&win=${win.days}`,
+    tip: {
+      label: x.label,
+      value: fmt.int(x.value),
+      rows: [['Share of the desk', fmt.pct(x.value / headcount)]],
+      action: `Open the ${x.label.toLowerCase()}`,
+    },
+  }));
+
+  /* The period the page is reading, to the instant — the stats behind these
+     bars are counted by the clock, so the lists behind them are too. */
+  const fromAt = new Date(now.getTime() - win.days * 86_400_000).toISOString();
+  const toAt = now.toISOString();
 
   const ranked = [...hiringPeople]
     .sort((a, b) => (d.stats.get(b.id)?.hires ?? 0) - (d.stats.get(a.id)?.hires ?? 0));
@@ -124,8 +146,8 @@ export function TeamBoard({ d, role, win }: { d: TeamList; role: string; win: W.
       <div className="grid g-2" style={{ marginBottom: 14 }}>
         <Card title="Team composition" sub="Who does what — every role on the desk, with its headcount.">
           <div className="pie-row">
-            <Pie segments={segs} size={210} />
-            <Legend items={segs.map((x, i) => ({
+            <Pie segments={segs} size={210} picks={rolePicks} />
+            <Legend picks={rolePicks} items={segs.map((x, i) => ({
               color: RAMP[i % RAMP.length], label: x.label, value: fmt.int(x.value),
             }))} />
           </div>
@@ -134,18 +156,35 @@ export function TeamBoard({ d, role, win }: { d: TeamList; role: string; win: W.
         <Card title="Attainment against target"
           sub={<>Hires in the period as a share of each person&rsquo;s pro-rated target. Click a ring.</>}>
           {withTarget.length ? (
-            <Rings items={withTarget.map((p) => {
-              const st = d.stats.get(p.id)!;
-              const parts = p.name.split(' ');
-              return {
-                name: `${parts[0]} ${(parts[1] ?? '').slice(0, 1)}.`,
-                value: Math.min(1.5, st.attainment ?? 0),
-                label: fmt.pct(st.attainment ?? 0),
-                sub: `${fmt.int(st.hires)} of ${fmt.int(st.target)}`,
-                title: p.name,
-                act: 'go', v: `/team/${p.id}`,
-              };
-            })} />
+            <Rings
+              items={withTarget.map((p) => {
+                const st = d.stats.get(p.id)!;
+                const parts = p.name.split(' ');
+                return {
+                  name: `${parts[0]} ${(parts[1] ?? '').slice(0, 1)}.`,
+                  value: Math.min(1.5, st.attainment ?? 0),
+                  label: fmt.pct(st.attainment ?? 0),
+                  sub: `${fmt.int(st.hires)} of ${fmt.int(st.target)}`,
+                  title: p.name,
+                };
+              })}
+              /* A ring opens the person, not a list — their own page is where
+                 the attainment behind the ring is broken down. */
+              picks={withTarget.map((p): Pick => {
+                const st = d.stats.get(p.id)!;
+                return {
+                  act: 'go', v: `/team/${p.id}`, opens: 'record',
+                  tip: {
+                    label: p.name,
+                    value: fmt.pct(st.attainment ?? 0),
+                    rows: [
+                      ['Hires in the period', fmt.int(st.hires)],
+                      ['Pro-rated target', fmt.int(st.target)],
+                    ],
+                    action: `Open ${fmt.first(p.name)}'s record`,
+                  },
+                };
+              })} />
           ) : <Empty icon="trophy" title="Nobody carries a hiring target yet" />}
         </Card>
       </div>
@@ -155,7 +194,32 @@ export function TeamBoard({ d, role, win }: { d: TeamList; role: string; win: W.
           carry none — their contribution shows as sourced applications and interviews scheduled,
           on their own profile.</>}>
         {ranked.length ? (
-          <HBars data={ranked.map((p) => {
+          <HBars
+            /* The bar is the hires they closed inside the period, so the list
+               behind it is exactly those applications. */
+            picks={ranked.map((p): Pick => {
+              const s = d.stats.get(p.id)!;
+              return {
+                ...(s.hires ? {
+                  act: 'go',
+                  v: applicationsUrl({ tab: 'hired', win: 'closed', fromAt, toAt, ownerId: p.id }),
+                } : {}),
+                tip: {
+                  label: p.name,
+                  value: `${fmt.int(s.hires)} hire${s.hires === 1 ? '' : 's'}`,
+                  rows: s.target
+                    ? [
+                      ['Pro-rated target', fmt.int(s.target)],
+                      ['Against target', fmt.pct(s.attainment ?? 0)],
+                    ]
+                    : [['Target', 'none — this role carries no hiring target']],
+                  ...(s.hires
+                    ? { action: `Open ${fmt.int(s.hires)} hire${s.hires === 1 ? '' : 's'}` }
+                    : {}),
+                },
+              };
+            })}
+            data={ranked.map((p) => {
             const s = d.stats.get(p.id)!;
             const att = s.attainment ?? 0;
             return {

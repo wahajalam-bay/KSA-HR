@@ -8,14 +8,22 @@ import type { CandidateRow } from '@/lib/queries/candidates';
    name on them, and how long they have been there. Clicking opens the panel —
    the application's if they are on one, the person's if they are only on file. */
 
-export function CandidateRows({ rows, total, shown, now }: {
+export function CandidateRows({ rows, total, shown, now, unit = 'person' }: {
   rows: CandidateRow[]; total: number; shown: number; now: Date;
+  /* Two of the tabs, and any list a chart sends here, are lists of
+     APPLICATIONS — somebody live on two boards is two rows. Saying "people"
+     over those rows would make the count read as wrong against the chart it
+     came from, when it is the word that is wrong. */
+  unit?: 'person' | 'application';
 }) {
+  const noun = unit === 'application'
+    ? `${total === 1 ? 'application' : 'applications'}`
+    : `${total === 1 ? 'person' : 'people'}`;
   return (
     <>
       <div className="row" style={{ marginBottom: 9 }}>
         <span className="t-sub">
-          {fmt.int(total)} {total === 1 ? 'person' : 'people'}
+          {fmt.int(total)} {noun}
           {total > shown && ` · showing the first ${shown}`}
         </span>
       </div>

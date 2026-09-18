@@ -157,6 +157,16 @@ export async function draw(
   };
 }
 
+/** Draw any tree the same way, for the things that are not sheets — a card on
+ *  a page, say. The chart primitives are client components, so they come back
+ *  as leaves carrying their props, which is exactly what a test that wants to
+ *  know what a chart was handed needs. */
+export async function drawTree(node: React.ReactNode): Promise<Drawn> {
+  const acc: Acc = { out: [], seen: { n: 0 }, elements: [], label: 0 };
+  await walk(node, acc, null);
+  return { text: acc.out.join(' '), nodes: acc.seen.n, elements: acc.elements };
+}
+
 /** What a screen reader would announce for an element, or '' if nothing. */
 export function accessibleName(n: Node): string {
   const p = n.props;

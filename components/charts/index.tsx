@@ -6,6 +6,10 @@ import {
   AX, GR, TX, TX2, CAT, SEQ, RAMP, nice, ticks, trunc, useChartId, ChartDefs, ChartFrame,
   useWidth, wavePath, formatter, type Fmt, type FmtName,
 } from './chart-core';
+import {
+  markProps, pickAt, pickAt2,
+  type Pick, type Tip, type Picks, type Picks2, type MarkProps,
+} from '@/lib/charts/interaction';
 
 /* The palette is NOT re-exported here on purpose. This module is a client
    boundary, and a constant exported across it reaches a server component as
@@ -13,6 +17,7 @@ import {
    then comes out as the chart's default. Import it from
    '@/lib/charts/palette', which both sides can read for real. */
 export type { FmtName } from './chart-core';
+export type { Pick, Tip, Picks, Picks2 } from '@/lib/charts/interaction';
 
 const TAU = Math.PI * 2;
 
@@ -20,15 +25,35 @@ const TAU = Math.PI * 2;
 //  Vertical bars — magnitude across categories, one hue, with an optional
 //  target marker where a plan or an SLA applies.
 // ═════════════════════════════════════════════════════════════════════════════
+/* A mark's own tooltip, merged with whatever the caller said about it.
+
+   Every chart here builds a tooltip from what it is already drawing — the
+   label, the value, the share — so a chart nobody has wired up still explains
+   itself in the product's own voice rather than through a browser `title`.
+   A caller that knows more (a target, a live count, where clicking goes)
+   supplies a `Pick`, and its fields win. */
+function mark(pick: Pick | null, own: Tip, cls?: string): MarkProps {
+  const tip: Tip = {
+    ...own,
+    ...(pick?.tip ?? {}),
+    rows: [...(own.rows ?? []), ...(pick?.tip?.rows ?? [])],
+  };
+  /* `cls` is whatever the element already had. It is folded into the base so
+     spreading these props never silently drops a chart's own styling. */
+  return markProps({ ...(pick ?? {}), tip }, cls ? `cmk ${cls}` : 'cmk');
+}
+
 export type BarDatum = { label: string; value: number; target?: number | null; color?: string };
 
 export function Bars({
   data: dataIn, h = 240, padL = 44, padB = 30, gap = 0.62, colorBy, color, labels = true,
-  labelMax, tickCount = 3, format,
+  labelMax, tickCount = 3, format, picks,
 }: {
   data: BarDatum[]; h?: number; padL?: number; padB?: number; gap?: number;
   colorBy?: boolean; color?: string; labels?: boolean; labelMax?: number; tickCount?: number;
   format?: FmtName;
+  /* One per bar, in the same order. See lib/charts/interaction.ts. */
+  picks?: Picks;
 }) {
   const [ref, w] = useWidth(720);
   const id = useChartId();
@@ -58,8 +83,11 @@ export function Bars({
           const hh = Math.max(d.value > 0 ? 2 : 0, ih - (y(d.value) - padT));
           const col = colorBy ? CAT[i % 4] : (d.color ?? color ?? 'var(--brand-500)');
           return (
-            <g className="bg" key={i}>
-              <title>{`${d.label}: ${fm(d.value)}${d.target ? ` (target ${fm(d.target)})` : ''}`}</title>
+            <g key={i} {...mark(pickAt(picks, i), {
+              label: d.label,
+              value: fm(d.value),
+              rows: d.target != null ? [['Target', fm(d.target)]] : undefined,
+            })}>
               {hh > 4 && (
                 <rect x={(x(i) - bw / 2).toFixed(1)} y={(y(d.value) + 4).toFixed(1)} width={bw.toFixed(1)}
                   height={hh.toFixed(1)} rx={radius.toFixed(1)} fill="#103828" opacity=".35" />
@@ -94,11 +122,13 @@ export function Bars({
 //  Grouped bars — two series side by side, same unit, one axis.
 // ═════════════════════════════════════════════════════════════════════════════
 export function Grouped({
-  data, keys, h = 250, format,
+  data, keys, h = 250, format, picks,
 }: {
   data: Array<Record<string, any> & { label: string }>;
   keys: Array<{ key: string; name: string; color?: string }>;
   h?: number; format?: FmtName;
+  /* [category][key] — the order the data and the keys were given in. */
+  picks?: Picks2;
 }) {
   const [ref, w] = useWidth(720);
   const id = useChartId();
@@ -128,8 +158,9 @@ export function Grouped({
               {keys.map((k, j) => {
                 const v = d[k.key] || 0;
                 return (
-                  <g className="bg" key={k.key}>
-                    <title>{`${d.label} — ${k.name}: ${fm(v)}`}</title>
+                  <g key={k.key} {...mark(pickAt2(picks, i, j), {
+                    label: `${d.label} · ${k.name}`, value: fm(v),
+                  })}>
                     <rect x={(x0 + j * bw).toFixed(1)} y={y(v).toFixed(1)} width={(bw - 3).toFixed(1)}
                       height={Math.max(v > 0 ? 2 : 0, ih - (y(v) - padT)).toFixed(1)}
                       rx={Math.min(7, bw / 2.5).toFixed(1)} fill={k.color ?? CAT[j % 4]} filter={`url(#${id}s)`} />
@@ -155,8 +186,13 @@ export function Grouped({
 export type Series = { name: string; color?: string; points: Array<{ x: string; y: number }> };
 
 export function Line({
-  series, h = 220, area = true, dots = true, maxTicks = 12, format,
-}: { series: Series[]; h?: number; area?: boolean; dots?: boolean; maxTicks?: number; format?: FmtName }) {
+  series, h = 220, area = true, dots = true, maxTicks = 12, format, picks,
+}: {
+  series: Series[]; h?: number; area?: boolean; dots?: boolean; maxTicks?: number;
+  format?: FmtName;
+  /* [series][point]. */
+  picks?: Picks2;
+}) {
   const [ref, w] = useWidth(720);
   const id = useChartId();
   const fm = formatter(format);
@@ -222,8 +258,10 @@ export function Line({
                 opacity={single ? 0.9 : 1} filter={`url(#${id}s)`}
                 clipPath={single && area ? `url(#${id}c)` : undefined} />
               {s.points.map((p, i) => (
-                <g className="bg" key={i}>
-                  <title>{`${p.x} — ${s.name}: ${fm(p.y)}`}</title>
+                <g key={i} {...mark(pickAt2(picks, si, i), {
+                  label: p.x, value: fm(p.y),
+                  rows: single ? undefined : [[s.name, fm(p.y)]],
+                })}>
                   <circle cx={x(i).toFixed(1)} cy={y(p.y).toFixed(1)} r={dots ? 3.4 : 8}
                     fill={!dots ? 'transparent' : single ? 'var(--ground)' : col}
                     stroke={!dots ? 'none' : single ? 'var(--wave-1)' : 'none'} strokeWidth="2" />
@@ -246,8 +284,11 @@ export function Line({
 //  Waves — several series as overlapping sheets, largest at the back so every
 //  sheet's cut edge stays visible.
 // ═════════════════════════════════════════════════════════════════════════════
-export function Waves({ series, h = 240, maxTicks = 12, format }: {
+export function Waves({ series, h = 240, maxTicks = 12, format, picks }: {
   series: Series[]; h?: number; maxTicks?: number; format?: FmtName;
+  /* [series][point]. The sheets themselves are never marks — they overlap, so
+     the point a person is actually aiming at is the one under the pointer. */
+  picks?: Picks2;
 }) {
   const [ref, w] = useWidth(720);
   const id = useChartId();
@@ -284,7 +325,7 @@ export function Waves({ series, h = 240, maxTicks = 12, format }: {
             const d = `${wavePath(P)} L ${x(s.points.length - 1).toFixed(1)} ${base} L ${x(0).toFixed(1)} ${base} Z`;
             return (
               <g key={i}>
-                <path d={d} fill={s.color ?? RAMP[i % 5]} filter={`url(#${id})`}><title>{s.name}</title></path>
+                <path d={d} fill={s.color ?? RAMP[i % 5]} filter={`url(#${id})`} pointerEvents="none" />
                 <path d={d} fill={`url(#${id}l)`} pointerEvents="none" />
               </g>
             );
@@ -294,8 +335,9 @@ export function Waves({ series, h = 240, maxTicks = 12, format }: {
           <text key={`x${i}`} x={x(i).toFixed(1)} y={h - padB + 15} textAnchor="middle" fill={TX} fontSize="11">{p.x}</text>
         )))}
         {series.map((s, si) => s.points.map((p, i) => (
-          <g className="bg" key={`${si}-${i}`}>
-            <title>{`${p.x} — ${s.name}: ${fm(p.y)}`}</title>
+          <g key={`${si}-${i}`} {...mark(pickAt2(picks, si, i), {
+            label: p.x, value: fm(p.y), rows: [[s.name, fm(p.y)]],
+          })}>
             <circle cx={x(i).toFixed(1)} cy={y(p.y).toFixed(1)} r="7" fill="transparent" />
           </g>
         )))}
@@ -317,9 +359,13 @@ export type Segment = { label: string; value: number; color?: string };
 
 export function Disc3d({
   segments, size = 200, depth = 22, tilt = 0.72, inner: innerRatio = 0, labels = true, centre, centreSub,
+  picks, format,
 }: {
   segments: Segment[]; size?: number; depth?: number; tilt?: number; inner?: number;
   labels?: boolean; centre?: React.ReactNode; centreSub?: string;
+  /* One per segment, in the order they were given — not the order they are
+     drawn in, which the chart decides. */
+  picks?: Picks; format?: FmtName;
 }) {
   const id = useChartId();
   const segs = segments.filter((s) => s.value > 0);
@@ -416,8 +462,12 @@ export function Disc3d({
             stroke="#ffffff" strokeOpacity=".18" strokeWidth="1.5" />
 
           {slices.map((sl) => (
-            <g className="slice t" data-i={sl.i} key={`f${sl.i}`}>
-              <title>{`${sl.s.label}: ${fmt.int(sl.s.value)} (${fmt.pct(sl.s.value / total)})`}</title>
+            <g className="slice t" data-i={sl.i} key={`f${sl.i}`}
+              {...mark(pickAt(picks, sl.i), {
+                label: sl.s.label,
+                value: (format ? formatter(format) : fmt.int)(sl.s.value),
+                rows: [['Share', fmt.pct(sl.s.value / total)]],
+              })}>
               <path d={face(sl.a0, sl.a1)} fill={sl.col} stroke="var(--ground)" strokeWidth="1.4" strokeLinejoin="round" />
             </g>
           ))}
@@ -455,13 +505,15 @@ export function Disc3d({
 
 export const Pie = (p: React.ComponentProps<typeof Disc3d>) => <Disc3d {...p} />;
 
-export function Donut({ segments, size = 168, thin, centre, centreSub }: {
+export function Donut({ segments, size = 168, thin, centre, centreSub, picks, format }: {
   segments: Segment[]; size?: number; thin?: boolean; centre?: React.ReactNode; centreSub?: string;
+  picks?: Picks; format?: FmtName;
 }) {
   const total = sum(segments.map((s) => s.value)) || 1;
   return (
     <Disc3d segments={segments} size={size} inner={thin ? 0.68 : 0.56} depth={16} tilt={0.64}
-      labels={false} centre={centre ?? fmt.int(total)} centreSub={centreSub ?? 'total'} />
+      labels={false} centre={centre ?? formatter(format ?? 'int')(total)}
+      centreSub={centreSub ?? 'total'} picks={picks} format={format} />
   );
 }
 
@@ -474,8 +526,17 @@ export type HBarDatum = {
   scaleHint?: number; note?: string; color?: string;
 };
 
-export function HBars({ data, max: maxIn, color, format }: {
-  data: HBarDatum[]; max?: number; color?: string; format?: FmtName;
+/* What a horizontal bar says about itself. */
+function rowTip(d: HBarDatum, max: number, fm: (n: number) => string): Tip {
+  const rows: Array<[string, string]> = [];
+  if (d.marker != null) rows.push([d.markerLabel ? 'Marker' : 'Target', fm(d.marker)]);
+  if (max > 0) rows.push(['Share of the largest', fmt.pct(d.value / max)]);
+  if (d.note) rows.push(['', d.note]);
+  return { label: d.label, value: fm(d.value), rows };
+}
+
+export function HBars({ data, max: maxIn, color, format, picks }: {
+  data: HBarDatum[]; max?: number; color?: string; format?: FmtName; picks?: Picks;
 }) {
   const fm = formatter(format);
   const max = maxIn ?? Math.max(1, ...data.map((d) =>
@@ -484,18 +545,22 @@ export function HBars({ data, max: maxIn, color, format }: {
     <div className="hbar">
       {data.map((d, i) => (
         <React.Fragment key={i}>
-          <div className="lb" title={d.label}>{d.label}</div>
-          <div className="tr">
+          {/* The row is the mark: its label, its bar and its figure all pick
+              the same thing, because a person aiming at "Sales" aims at the
+              word as readily as at the bar. */}
+          <div className="lb" {...mark(pickAt(picks, i), rowTip(d, max, fm))}>{d.label}</div>
+          <div className="tr" {...mark(pickAt(picks, i), rowTip(d, max, fm))}>
             <i className="fl" style={{
               width: `${(pct(d.value, max) * 100).toFixed(1)}%`,
               ...(d.color || color ? { background: d.color ?? color } : {}),
             }} />
             {d.marker != null && (
-              <b className="mk" style={{ left: `${Math.min(100, pct(d.marker, max) * 100).toFixed(1)}%` }}
-                title={d.markerLabel ?? fm(d.marker)} />
+              <b className="mk" style={{ left: `${Math.min(100, pct(d.marker, max) * 100).toFixed(1)}%` }} />
             )}
           </div>
-          <div className="vv">{fm(d.value)}{d.note && <> <em className="mut">{d.note}</em></>}</div>
+          <div className="vv" {...mark(pickAt(picks, i), rowTip(d, max, fm))}>
+            {fm(d.value)}{d.note && <> <em className="mut">{d.note}</em></>}
+          </div>
         </React.Fragment>
       ))}
     </div>
@@ -507,7 +572,7 @@ export function HBars({ data, max: maxIn, color, format }: {
 // ═════════════════════════════════════════════════════════════════════════════
 export type FunnelRow = { key: string; name: string; n: number; convFromPrev: number | null };
 
-export function Funnel({ rows }: { rows: FunnelRow[] }) {
+export function Funnel({ rows, picks }: { rows: FunnelRow[]; picks?: Picks }) {
   const max = Math.max(1, ...rows.map((r) => r.n));
   return (
     <div className="fnl">
@@ -515,15 +580,27 @@ export function Funnel({ rows }: { rows: FunnelRow[] }) {
         const wpc = pct(r.n, max) * 100;
         const drop = r.convFromPrev == null ? 0 : 1 - r.convFromPrev;
         const band = Math.min(6, Math.floor((i / Math.max(1, rows.length - 1)) * 5) + 1);
+        const pick = pickAt(picks, i);
+        const tip: Tip = {
+          label: r.name, value: fmt.int(r.n),
+          rows: [
+            ['Share of the widest stage', fmt.pct(r.n / max)],
+            ...(r.convFromPrev == null
+              ? [] as Array<[string, string]>
+              : [['From the stage before', fmt.pct(r.convFromPrev)] as [string, string]]),
+          ],
+        };
         return (
           <React.Fragment key={r.key}>
-            <div className="lb" title={r.name}>{r.name}</div>
-            <div className="tr">
+            {/* Name, bar and conversion are three cells of one row and one
+                mark: whichever a person aims at, they mean the stage. */}
+            <div {...mark(pick, tip, 'lb')}>{r.name}</div>
+            <div {...mark(pick, tip, 'tr')}>
               <i className="fl" style={{ width: `${wpc.toFixed(1)}%`, background: `var(--stg-${band})` }}>
                 <b>{fmt.int(r.n)}</b>
               </i>
             </div>
-            <div className={`cv ${r.convFromPrev == null ? 'mut' : drop > 0.6 ? 'bad' : drop > 0.4 ? 'warn' : 'good'}`}>
+            <div {...mark(pick, tip, `cv ${r.convFromPrev == null ? 'mut' : drop > 0.6 ? 'bad' : drop > 0.4 ? 'warn' : 'good'}`)}>
               {r.convFromPrev == null ? '—' : fmt.pct(r.convFromPrev)}
             </div>
           </React.Fragment>
@@ -536,21 +613,34 @@ export function Funnel({ rows }: { rows: FunnelRow[] }) {
 // ═════════════════════════════════════════════════════════════════════════════
 //  Stack, spark, ring, rings, heat, legend
 // ═════════════════════════════════════════════════════════════════════════════
-export function Stack({ segments }: { segments: Segment[] }) {
+export function Stack({ segments, picks, format }: {
+  segments: Segment[]; picks?: Picks; format?: FmtName;
+}) {
   const total = sum(segments.map((s) => s.value)) || 1;
+  const fm = formatter(format ?? 'int');
   return (
     <div className="stk">
-      {segments.filter((s) => s.value).map((s, i) => (
+      {/* An empty segment is not drawn, but the picks the caller passed are
+          indexed against the segments it passed — so the original index is
+          carried through rather than recomputed after the filter. */}
+      {segments.map((s, i) => [s, i] as const).filter(([s]) => s.value).map(([s, i]) => (
         <i key={i} style={{ flex: s.value, background: s.color ?? `var(--stg-${(i % 6) + 1})` }}
-          title={`${s.label}: ${fmt.int(s.value)} (${fmt.pct(s.value / total)})`}>
-          {s.value / total > 0.08 ? fmt.int(s.value) : ''}
+          {...mark(pickAt(picks, i), {
+            label: s.label, value: fm(s.value),
+            rows: [['Share', fmt.pct(s.value / total)]],
+          })}>
+          {s.value / total > 0.08 ? fm(s.value) : ''}
         </i>
       ))}
     </div>
   );
 }
 
-export function Spark({ values, w = 96, h = 28, color }: { values: number[]; w?: number; h?: number; color?: string }) {
+export function Spark({ values, w = 96, h = 28, color, pick }: {
+  values: number[]; w?: number; h?: number; color?: string;
+  /* A sparkline is one mark: it is too small to aim inside. */
+  pick?: Pick;
+}) {
   if (!values.length) return null;
   const max = Math.max(...values), min = Math.min(...values);
   const rng = max - min || 1;
@@ -559,7 +649,10 @@ export function Spark({ values, w = 96, h = 28, color }: { values: number[]; w?:
   ).join(' ');
   const col = color ?? 'var(--brand-500)';
   return (
-    <svg className="spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none"
+      {...(pick
+        ? mark(pick, { label: pick.tip?.label ?? 'Trend', value: fmt.int(values[values.length - 1]) }, 'spark')
+        : { className: 'spark' })}>
       <polygon points={`1,${h} ${pts} ${w - 1},${h}`} fill={col} opacity=".10" transform="translate(0 4)" />
       <polygon points={`1,${h} ${pts} ${w - 1},${h}`} fill={col} opacity=".18" />
       <polyline points={pts} fill="none" stroke={col} strokeWidth="1.8" strokeLinejoin="round" />
@@ -568,15 +661,19 @@ export function Spark({ values, w = 96, h = 28, color }: { values: number[]; w?:
 }
 
 export function GaugeRing({ value, size = 76, sw = 8, color, label, title }: {
-  value: number; size?: number; sw?: number; color?: string; label?: React.ReactNode; title?: string;
+  value: number; size?: number; sw?: number; color?: string; label?: React.ReactNode;
+  /* `null` when something outside is already describing the ring — a Rings
+     tile, say — so the browser does not draw a second tooltip over ours. */
+  title?: string | null;
 }) {
   const r = (size - sw) / 2;
   const c = 2 * Math.PI * r;
   const v = clamp(value || 0, 0, 1.5);
   const col = color ?? (v >= 0.95 ? 'var(--ok)' : v >= 0.7 ? 'var(--brand-500)' : 'var(--warn)');
   return (
-    <svg className="rng" viewBox={`0 0 ${size} ${size}`} role="img">
-      <title>{title ?? fmt.pct(value)}</title>
+    <svg className="rng" viewBox={`0 0 ${size} ${size}`} role={title === null ? undefined : 'img'}
+      aria-hidden={title === null ? true : undefined}>
+      {title !== null && <title>{title ?? fmt.pct(value)}</title>}
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--nm-dark)" strokeWidth={sw} />
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={col} strokeWidth={sw} strokeLinecap="round"
         strokeDasharray={`${(c * Math.min(1, v)).toFixed(1)} ${c.toFixed(1)}`}
@@ -587,32 +684,47 @@ export function GaugeRing({ value, size = 76, sw = 8, color, label, title }: {
   );
 }
 
-export function Rings({ items, size = 84 }: {
-  items: Array<{ name: string; value: number; label?: React.ReactNode; sub?: string; title?: string; color?: string; act?: string; v?: string }>;
-  size?: number;
+export function Rings({ items, size = 84, picks }: {
+  items: Array<{
+    name: string; value: number; label?: React.ReactNode; sub?: string; title?: string;
+    color?: string; act?: string; v?: string;
+  }>;
+  size?: number; picks?: Picks;
 }) {
   return (
     <div className="rings">
       {items.map((it, i) => {
+        /* A tile carrying its own action is still honoured — that is how every
+           existing caller is written — but a `pick` says more and wins. */
+        const pick = pickAt(picks, i) ?? (it.act ? { act: it.act, v: it.v } : null);
+        const props = mark(pick, {
+          label: it.name,
+          value: it.title ?? fmt.pct(it.value),
+          rows: it.sub ? [['', it.sub]] : undefined,
+        }, 'rg');
         const inner = (
           <>
-            <GaugeRing value={it.value} size={size} label={it.label ?? fmt.pct(it.value)} title={it.title} color={it.color} />
+            <GaugeRing value={it.value} size={size} label={it.label ?? fmt.pct(it.value)} title={null} color={it.color} />
             <b className="trunc">{it.name}</b>
             {it.sub && <span>{it.sub}</span>}
           </>
         );
-        return it.act
-          ? <button className="rg" key={i} data-act={it.act} data-v={it.v ?? ''}>{inner}</button>
-          : <div className="rg" key={i}>{inner}</div>;
+        if (!pick?.act) return <div key={i} {...props}>{inner}</div>;
+        /* A real button already is one; it does not need the role or the
+           tabindex a plain element would. */
+        const { role: _r, tabIndex: _t, ...b } = props;
+        return <button type="button" key={i} {...b}>{inner}</button>;
       })}
     </div>
   );
 }
 
-export function Heat({ rows, cols, format }: {
+export function Heat({ rows, cols, format, picks }: {
   rows: Array<{ label: string; values: Record<string, number | null> }>;
   cols: Array<{ key: string; name: string; short?: string }>;
   format?: FmtName;
+  /* [row][column]. */
+  picks?: Picks2;
 }) {
   const max = Math.max(1, ...rows.flatMap((r) => cols.map((c) => r.values[c.key] || 0)));
   const fm = formatter(format ?? 'dec1');
@@ -628,11 +740,14 @@ export function Heat({ rows, cols, format }: {
         {rows.map((r, i) => (
           <div className="heat-row" key={i}>
             <span className="heat-l" title={r.label}>{r.label}</span>
-            {cols.map((c) => {
+            {cols.map((c, j) => {
               const v = r.values[c.key];
               return (
-                <span key={c.key} className={`heat-c b${band(v)}`}
-                  title={`${r.label} · ${c.name}: ${v == null ? 'no data' : fm(v)}`}>
+                <span key={c.key} {...mark(pickAt2(picks, i, j), {
+                  label: `${r.label} · ${c.name}`,
+                  value: v == null ? 'no data' : fm(v),
+                  rows: v == null ? undefined : [['Share of the highest', fmt.pct(v / max)]],
+                }, `heat-c b${band(v)}`)}>
                   {v == null ? '' : fm(v)}
                 </span>
               );
@@ -644,14 +759,17 @@ export function Heat({ rows, cols, format }: {
   );
 }
 
-export function Legend({ items }: {
+export function Legend({ items, picks }: {
   items: Array<{ color: string; label: string; sub?: string; value?: React.ReactNode }>;
+  picks?: Picks;
 }) {
   const rows = items.some((i) => i.value != null);
   return (
     <div className={`legend${rows ? ' rows' : ''}`}>
       {items.map((i, k) => (
-        <span key={k} data-i={k}>
+        <span key={k} data-i={k} {...mark(pickAt(picks, k), {
+          label: i.label, ...(i.sub ? { note: i.sub } : {}),
+        })}>
           <i style={{ background: i.color }} />
           <span className="lg-l">{i.label}{i.sub && <em className="lg-s">{i.sub}</em>}</span>
           {i.value != null && <b>{i.value}</b>}
@@ -671,8 +789,10 @@ export function Legend({ items }: {
 export type RadarAxis = { label: string; must?: boolean };
 export type RadarSeries = { kind: 'bar' | 'got'; values: number[] };
 
-export function Radar({ axes, series, h = 330, max = 5, pad = 78 }: {
+export function Radar({ axes, series, h = 330, max = 5, pad = 78, picks }: {
   axes: RadarAxis[]; series: RadarSeries[]; h?: number; max?: number; pad?: number;
+  /* One per axis — the candidate's point on it. */
+  picks?: Picks;
 }) {
   const [ref, wRaw] = useWidth(460);
   const id = useChartId();
@@ -716,10 +836,14 @@ export function Radar({ axes, series, h = 330, max = 5, pad = 78 }: {
           const [x, y] = at(i, v);
           const short = !!bar && v < bar.values[i];
           return (
-            <circle key={i} cx={x.toFixed(1)} cy={y.toFixed(1)} r={short ? 4 : 3.4}
-              fill={short ? 'var(--bad)' : 'var(--brand-600)'} stroke="var(--surface)" strokeWidth="1.6">
-              <title>{`${axes[i].label} — ${v} of ${bar ? bar.values[i] : max}${short ? ' · short' : ''}`}</title>
-            </circle>
+            <g key={i} {...mark(pickAt(picks, i), {
+              label: axes[i].label,
+              value: `${v} of ${bar ? bar.values[i] : max}`,
+              ...(short ? { note: 'Below what the job asks for.' } : {}),
+            })}>
+              <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={short ? 4 : 3.4}
+                fill={short ? 'var(--bad)' : 'var(--brand-600)'} stroke="var(--surface)" strokeWidth="1.6" />
+            </g>
           );
         })}
         {axes.map((a, i) => {
@@ -744,3 +868,21 @@ export function Radar({ axes, series, h = 330, max = 5, pad = 78 }: {
     </div>
   );
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   THESE ARE CLIENT COMPONENTS, AND SAY SO OUT LOUD
+
+   `'use client'` at the top of this file is a message to the bundler. A test
+   runner has no bundler, so under `--conditions=react-server` these resolve to
+   the functions themselves and anything walking a tree would call them — and
+   they measure elements and hold state, so calling them there throws.
+
+   A static flag is how the rest of the codebase settles this (`Btn.isControl`,
+   `Subnav.isClient`). The walk honours it and records the chart as the leaf it
+   is, carrying its props — which is also what makes a chart's marks readable in
+   a test without pretending to render SVG.
+   ═════════════════════════════════════════════════════════════════════════════*/
+for (const c of [
+  Bars, Grouped, Line, Waves, Disc3d, Pie, Donut, HBars, Funnel, Stack,
+  Spark, GaugeRing, Rings, Heat, Legend, Radar,
+] as Array<{ isClient?: boolean }>) c.isClient = true;

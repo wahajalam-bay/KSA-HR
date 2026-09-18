@@ -3,13 +3,15 @@ import {
   listCandidates, listPools, candidateFilterOptions, tabCounts, type CandidateTab,
 } from '@/lib/queries/candidates';
 import { db } from '@/db/client';
-import { talentPools } from '@/db/schema';
+import { talentPools, departments, jobs } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { TopBar } from '@/components/app/shell';
 import { Subnav, Btn, Empty } from '@/components/ui/primitives';
 import { can } from '@/lib/authz';
 import { fmt } from '@/lib/format';
 import { CandidateFilters } from '@/components/candidates/filters';
+import { DrillChips, appChips } from '@/components/charts/chips';
+import { appFiltersFrom } from '@/lib/charts/drill';
 import { CandidateRows } from '@/components/candidates/list';
 import { PoolsTab } from '@/components/candidates/pools';
 
@@ -81,11 +83,31 @@ export default async function CandidatesPage({ searchParams }: {
     );
   }
 
+  /* Whatever a chart handed over. The page does not interpret it — the query
+     layer does, by the same definitions the chart counted with. */
+  const drill = appFiltersFrom(sp);
+
   const data = await listCandidates(viewer, {
-    tab, q: sp.q, family: sp.fam, stage: sp.stage, source: sp.src, ownerId: sp.own,
+    tab, q: sp.q, family: sp.fam, source: sp.src, ownerId: sp.own,
     held: sp.held, tags: (sp.tags ?? '').split(',').filter(Boolean),
-    poolId: sp.pool, sort: sp.sort,
+    poolId: sp.pool, sort: sp.sort, ...drill,
   }, now);
+
+  /* Names for the chips. Only looked up when a chip needs one. */
+  const [deptRow, jobRow] = await Promise.all([
+    drill.deptId
+      ? db().select().from(departments).where(eq(departments.id, drill.deptId)).limit(1)
+      : Promise.resolve([]),
+    drill.jobId
+      ? db().select().from(jobs).where(eq(jobs.id, drill.jobId)).limit(1)
+      : Promise.resolve([]),
+  ]);
+  const stageName = (k: string) => options.stages.find((s) => s.key === k)?.name ?? k;
+  const chips = appChips(sp, {
+    stage: stageName,
+    dept: () => deptRow[0]?.name ?? drill.deptId!,
+    job: () => jobRow[0]?.title ?? drill.jobId!,
+  });
 
   return (
     <>
@@ -94,8 +116,10 @@ export default async function CandidatesPage({ searchParams }: {
         {strip}
         <CandidateFilters sp={sp} options={options} tab={tab}
           tagFacets={data.tagFacets} poolName={pool?.name ?? null} />
+        <DrillChips sp={sp} path="/candidates" chips={chips} />
         {data.rows.length ? (
-          <CandidateRows rows={data.rows} total={data.total} shown={data.shown} now={now} />
+          <CandidateRows rows={data.rows} total={data.total} shown={data.shown} now={now}
+            unit={tab === 'pipeline' || tab === 'hired' || drill.apps ? 'application' : 'person'} />
         ) : (
           <Empty icon="search" title="Nobody matches" sub="Loosen a filter or clear the tags."
             action={<Btn variant="out" action="cand.clear">Clear filters</Btn>} />
