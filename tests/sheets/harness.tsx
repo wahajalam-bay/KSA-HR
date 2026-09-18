@@ -26,6 +26,23 @@ export { sheetNames };
 const isPromise = (x: unknown): x is Promise<unknown> =>
   !!x && typeof (x as { then?: unknown }).then === 'function';
 
+/* A client component. With a bundler the framework turns a `'use client'`
+   module into a reference and never calls it; here there is no bundler, so
+   the import is the function itself and calling it would run hooks this
+   runtime does not have. The component says what it is with a static flag —
+   the same convention as `Btn.isControl` — and the walk honours it. */
+const CLIENT_REFERENCE = Symbol.for('react.client.reference');
+const isClientReference = (t: unknown): boolean => {
+  if (!t || (typeof t !== 'function' && typeof t !== 'object')) return false;
+  const c = t as { $$typeof?: symbol; isClient?: boolean };
+  return c.$$typeof === CLIENT_REFERENCE || c.isClient === true;
+};
+
+/* What to call it in the element list. A reference carries the export name. */
+const nameOf = (t: unknown): string =>
+  String((t as { name?: string; displayName?: string }).displayName
+    ?? (t as { name?: string }).name ?? 'client-component');
+
 /** One host element the walk went through, flattened for assertions. */
 export type Node = {
   tag: string;
@@ -63,7 +80,24 @@ async function walk(node: React.ReactNode, acc: Acc, into: string[] | null): Pro
   const type = el.type;
 
   /* A component is called; a host element is descended into. A class component
-     would need instantiating, and the product has none. */
+     would need instantiating, and the product has none.
+
+     A client component is neither: under `--conditions=react-server` its
+     module resolves to a reference rather than the function, and calling it
+     would run hooks that do not exist in this runtime. The framework does not
+     call it either — it serialises the reference and the browser renders it —
+     so the walk stops here too, and records it as the leaf it is. Its props
+     still go into the element list, which is what the wiring and
+     accessibility assertions read. */
+  if (isClientReference(type)) {
+    acc.elements.push({
+      tag: nameOf(type),
+      props: el.props as Record<string, unknown>,
+      text: '',
+      inLabel: acc.label > 0,
+    });
+    return;
+  }
   if (typeof type === 'function') {
     const rendered = (type as (p: unknown) => unknown)(el.props);
     await walk((isPromise(rendered) ? await rendered : rendered) as React.ReactNode, acc, into);

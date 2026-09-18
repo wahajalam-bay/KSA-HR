@@ -184,7 +184,7 @@ export const LOCAL_ACTIONS = new Set<string>([
   'sheet.close', 'sheet.closeAll', 'confirm.yes', 'confirm.no',
   'palette.open', 'palette.close', 'palette.run',
   'theme.cycle', 'theme.set',
-  'subnav.scroll', 'drawer.tab', 'drawer.full', 'job.jump',
+  'drawer.tab', 'drawer.full', 'job.jump',
   'mp.zoom', 'noop',
 ]);
 

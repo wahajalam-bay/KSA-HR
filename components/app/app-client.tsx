@@ -195,11 +195,6 @@ export function AppClient({ children, isPortal }: { children: React.ReactNode; i
       case 'palette.close': setPaletteOpen(false); return;
       case 'theme.cycle': cycleTheme(); return;
       case 'theme.set': setTheme(v as ThemeName); return;
-      case 'subnav.scroll': {
-        const nav = el?.parentElement?.querySelector('.subnav');
-        nav?.scrollBy({ left: (Number(v) || 1) * Math.max(120, nav.clientWidth * 0.6), behavior: 'smooth' });
-        return;
-      }
       case 'job.jump': {
         el?.closest('.sheet')?.querySelector(`#jsec_${v}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
         return;
@@ -426,7 +421,6 @@ export function AppClient({ children, isPortal }: { children: React.ReactNode; i
   }, [sheets.length, paletteOpen]);
 
   /* The tab strips that overflow show their arrows. */
-  React.useEffect(() => { markSubnavOverflow(); });
 
   const ctx: Ctx = React.useMemo(
     () => ({ fire, toast, closeSheet, confirm, pending }),
@@ -688,32 +682,3 @@ function cycleTheme(): void {
   setTheme(order[(order.indexOf(currentTheme()) + 1) % 3]);
 }
 
-/* Which strips have already been wired. A WeakSet rather than an attribute on
-   the element: writing `data-snav` onto a node the server rendered is a
-   mutation React did not make, and React 19 reports it as a hydration
-   mismatch on every page with a tab strip. The set holds no strong reference,
-   so a strip that leaves the document is collected with it. */
-const wiredSubnavs = new WeakSet<HTMLElement>();
-
-/** Mark the tab strips that overflow, so their arrows show. */
-function markSubnavOverflow(): void {
-  document.querySelectorAll<HTMLElement>('.snav-wrap').forEach((w) => {
-    const n = w.querySelector<HTMLElement>('.subnav');
-    if (!n) return;
-    const update = () => {
-      const more = n.scrollWidth > n.clientWidth + 4;
-      w.classList.toggle('has-r', more && n.scrollLeft + n.clientWidth < n.scrollWidth - 4);
-      w.classList.toggle('has-l', more && n.scrollLeft > 4);
-    };
-    if (!wiredSubnavs.has(n)) {
-      wiredSubnavs.add(n);
-      n.addEventListener('scroll', update, { passive: true });
-      const on = n.querySelector<HTMLElement>('button.on');
-      if (on && n.scrollWidth > n.clientWidth + 4) {
-        const x = on.offsetLeft - (n.clientWidth - on.offsetWidth) / 2;
-        if (x > 0) n.scrollLeft = x;
-      }
-    }
-    update();
-  });
-}

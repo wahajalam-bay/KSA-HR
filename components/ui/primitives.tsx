@@ -277,29 +277,13 @@ export function Seg({ options, active, action, className }: {
   );
 }
 
-export type SubnavTab = { v: string; t: string; n?: number | string | null };
 /* A tab strip that scrolls when it is wider than its box; the arrows at the
    edges appear only when there is more to see. */
-export function Subnav({ tabs, active, action }: { tabs: SubnavTab[]; active: string; action: string }) {
-  return (
-    <div className="snav-wrap">
-      <nav className="subnav">
-        {tabs.map((x) => (
-          <button key={x.v} className={x.v === active ? 'on' : ''} data-act={action} data-v={x.v}>
-            {x.t}
-            {x.n != null && <b>{typeof x.n === 'number' ? fmt.int(x.n) : x.n}</b>}
-          </button>
-        ))}
-      </nav>
-      <button className="snav-arrow l" data-act="subnav.scroll" data-v="-1" aria-label="Scroll tabs left" tabIndex={-1}>
-        <Icon name="chevL" size={14} />
-      </button>
-      <button className="snav-arrow r" data-act="subnav.scroll" data-v="1" aria-label="More tabs" tabIndex={-1}>
-        <Icon name="chev" size={14} />
-      </button>
-    </div>
-  );
-}
+/* The tab strip moved to its own file because it has to measure itself,
+   which makes it a client component — and everything else in here stays a
+   server one. Re-exported so no caller has to know that. */
+export { Subnav } from '@/components/ui/subnav';
+export type { SubnavTab } from '@/components/ui/subnav';
 
 // ── tables ──────────────────────────────────────────────────────────────────
 export type Column<T> = {

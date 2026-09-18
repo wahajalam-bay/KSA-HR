@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-18T05:57:11.376Z",
+  "at": "2026-09-18T07:52:59.018Z",
   "base": "http://127.0.0.1:3400",
   "routes": 48,
   "roles": [
@@ -12,7 +12,7 @@
   ],
   "walked": 284,
   "retried": [
-    "admin:manpower-positions"
+    "coordinator:manpower-positions"
   ],
   "findings": []
 }
