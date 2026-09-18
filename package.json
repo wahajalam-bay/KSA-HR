@@ -1,0 +1,58 @@
+{
+  "name": "bayut-ta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bayut KSA — Talent Acquisition platform. Production system converted from the v30 click-through prototype.",
+  "scripts": {
+    "dev": "next dev -p 3400",
+    "build": "next build",
+    "start": "next start -p 3400",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --conditions=react-server --import tsx db/migrate.ts up",
+    "db:status": "node --conditions=react-server --import tsx db/migrate.ts status",
+    "db:reset": "node --conditions=react-server --import tsx db/migrate.ts reset",
+    "db:seed": "node --conditions=react-server --import tsx db/seed/run.ts",
+    "db:verify": "node --conditions=react-server --import tsx db/verify.ts",
+    "test": "tsx --conditions=react-server tests/run.ts",
+    "test:unit": "node --conditions=react-server --import tsx tests/run.ts unit",
+    "test:db": "node --conditions=react-server --import tsx tests/run.ts db",
+    "e2e": "node --conditions=react-server --import tsx tests/run.ts \"end to end\"",
+    "walk": "node --conditions=react-server --import tsx tests/walk.ts",
+    "accounts": "node --conditions=react-server --import tsx scripts/accounts.ts",
+    "visual:baseline": "node --conditions=react-server --import tsx tests/visual/baseline.ts",
+    "visual:compare": "node --conditions=react-server --import tsx tests/visual/compare.ts",
+    "worker": "node --conditions=react-server --import tsx workers/main.ts",
+    "recompute": "node --conditions=react-server --import tsx scripts/recompute.ts",
+    "visual:shot": "node --conditions=react-server --import tsx tests/visual/shot.ts",
+    "test:write": "tsx --conditions=react-server tests/run.ts write",
+    "docs": "node --conditions=react-server --import tsx scripts/docs.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "drizzle-orm": "^0.36.4",
+    "jose": "^5.9.6",
+    "next": "^15.5.25",
+    "pg": "^8.13.1",
+    "pngjs": "^7.0.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "19.0.7",
+    "@types/react-dom": "19.0.3",
+    "drizzle-kit": "^0.28.1",
+    "playwright": "^1.49.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.11"
+  }
+}

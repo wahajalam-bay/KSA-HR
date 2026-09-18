@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Quirks-mode parity.
+
+   The prototype is a single HTML file with no doctype, so a browser renders it
+   in quirks mode — `document.compatMode` is "BackCompat". One quirk changes
+   the metrics of the interface everywhere: a line box that contains no text of
+   its own, only an inline element, ignores the block's strut and is as tall as
+   that element's own line-height. In standards mode the strut always applies,
+   so the same markup is several pixels taller per row.
+
+   Production is served in standards mode, as anything handling candidate data
+   should be: quirks mode would also bring the box model, the table and the
+   percentage-height quirks with it, and none of those are things to ship in
+   2026. So the measured cases are reproduced here instead, by making the
+   offending inline element a block — which is what the prototype's line box
+   was already doing, and which changes nothing else about the design.
+
+   Each rule below was found by tests/visual/compare.ts and is kept because
+   removing it puts a route back over its tolerance. Nothing speculative goes
+   in this file: if a rule is not holding a capture down, it does not belong.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* The timeline row. Under the sentence sit the date stamp and, on some feeds,
+   the chip that opens the record — both inline, on one line or two depending on
+   the width. Every one of those lines holds no text of `.bd`'s own, so quirks
+   mode measured them by what is actually on them and standards mode adds the
+   block's 22.05px strut. Six pixels a line, on every activity feed in the
+   product, and the rows that wrap pay it twice.
+
+   Zeroing the strut and giving each child back its own line-height is the same
+   thing said in a way standards mode agrees with — and unlike making the stamp
+   a block, it holds however the row happens to wrap. */
+.tl .bd { line-height: 0; }
+.tl .bd > * { line-height: 1.47; }
+.tl .bd > p { line-height: 1.5; }
+
+/* A second line inside a table cell — the grey caption under a title, written
+   as `<b>Title</b><br><span class="t-foot">…</span>`. The line it sits on holds
+   no text of its own, so quirks mode gave it the caption's own line-height and
+   standards mode gives it the cell's. Making it a block is the same thing said
+   in a way standards mode agrees with: one pixel a row, and there are hundreds
+   of rows on the plan. */
+br + .t-foot,
+br + .t-cap,
+br + .t-sub { display: block; }
+
+/* A KPI value and its unit — `<div class="val">7.3k<small>/ month</small></div>`.
+   Narrow enough and the unit wraps; the line it lands on holds no text of its
+   own, so the prototype gave it the unit's 16.8px and standards mode gives it
+   the number's 33.6px. The strut is moved off the block and onto the two
+   inline boxes: on one line the taller of them still sets the height, and on
+   two the unit is as tall as the unit. Seventeen pixels a tile, on every
+   report that carries a unit. */
+.kpi .val { line-height: 0; }
+.kpi .val > .v,
+.kpi .val small { line-height: 1.12; }
+
+/* The same line box, one line earlier: a cell that opens with its caption and
+   breaks after it — `<span class="t-foot">Accepted 27 Aug</span><br><b>10 Sep
+   2026</b>` — puts no text of its own on the first line either, so the
+   prototype sized that line by the caption and standards mode sizes it by the
+   cell. One pixel a row on the onboarding board, which is enough to move every
+   row under it.
+
+   The caption becomes the block the prototype's line box already was, and the
+   break that followed it goes with it — leave the <br> in and the block ends
+   the line, the break starts another, and the cell gains a whole empty row. */
+.td > .t-foot:first-child:has(+ br),
+.td > .t-cap:first-child:has(+ br),
+.td > .t-sub:first-child:has(+ br) { display: block; }
+.td > .t-foot:first-child:has(+ br) + br,
+.td > .t-cap:first-child:has(+ br) + br,
+.td > .t-sub:first-child:has(+ br) + br { display: none; }
+
+/* The upload well: an icon on one line and a caption on another, neither of
+   them text the well owns. Quirks gave each line the height of the thing on
+   it — 42px for the icon, 17px for the caption; standards adds the well's
+   22px strut under both. Eleven pixels a dropzone, and there is one on every
+   CV, photo and template upload. The icon keeps its centring explicitly,
+   because a block no longer inherits it from `text-align`. */
+.dz .ic { display: block; margin-inline: auto; }
+.dz i { display: block; }
+
+/* A key-and-value pair: the label is a block, the value is an inline span on a
+   line of its own. The pair owns no text, so quirks sized that line by the
+   value's 20.58px and standards adds the 22.05px strut. One and a half pixels
+   a pair, and the joiner's record alone has fourteen of them. */
+.kv > span { display: block; }
+
+/* A value that is a reference in monospace pays the quirk twice: the line holds
+   no text of the value block itself, so the prototype sized it by the run and
+   standards mode adds the block's 20.58px strut on top of the taller monospace
+   box. A pixel a pair, and the requisition's details card has two of them. The
+   strut comes off the block and goes onto the run. */
+.kv > span:has(> .mono) { line-height: 0; }
+.kv > span:has(> .mono) > .mono { line-height: 1.47; }
+
+/* A long run of merge fields under a card — `Merge fields: <span class="mono">
+   {{…}} {{…}} …</span>`. The label puts text of the block on the first line, so
+   that one keeps the strut; every line the run wraps onto after it carries only
+   the monospace span, and quirks mode sized those by the span's own 17.4px
+   against the block's 18.375px. One pixel a line, three lines down on the
+   sales-pitch tab, and it moves the whole table under it.
+
+   The strut comes off the block and goes onto its children, which is the same
+   thing said in a way standards mode agrees with and holds however it wraps —
+   so every child, including the label, is an element rather than bare text.
+
+   Marked with a class rather than matched structurally: `:has(> .mono)` also
+   catches the employee code under a name on the plan, where the run is one
+   line and the rule would pull it a pixel up. */
+.mergeline { line-height: 0; }
+.mergeline > * { line-height: 1.47; }

@@ -1,0 +1,2264 @@
+{
+  "at": "2026-09-18T03:59:46.108Z",
+  "tolerance": 0.02,
+  "matched": 49,
+  "total": 49,
+  "routes": [
+    {
+      "id": "candidates",
+      "worst": 0.014651267472162995,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.01087708777540867,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.011177298033641318,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.014150438284766642,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.014651267472162995,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.009443906896737086,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.009318658280922432,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "candidates-pools",
+      "worst": 0.0068596120088220735,
+      "where": "390 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0027270833333333335,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0025069444444444445,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.004244573393509564,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.003912529550827423,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0068596120088220735,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.006609053127484959,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights",
+      "worst": 0.0003863775473464391,
+      "where": "1440 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0003771512925757903,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0003863775473464391,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.00030375699440447643,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.000292099653610445,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.00009173447579945356,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.00009917240626967952,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-ask",
+      "worst": 0.003172222222222222,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0024569444444444443,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0027194444444444445,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.002668888888888889,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.003172222222222222,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.00260166266025641,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0028595753205128203,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-budget",
+      "worst": 0.00024123163658047378,
+      "where": "390 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.00019568537609774723,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.00020795832651502756,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.00018780079514542792,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.00017419962335216572,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.00024123163658047378,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0002331002331002331,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-departments",
+      "worst": 0.0003093416994900919,
+      "where": "1440 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0003093416994900919,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0003051433544013923,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.00013839784848759557,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.00013688695494515457,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.00004382594837644782,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.000059762656876974304,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-interviewers",
+      "worst": 0.015342328835582208,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.007239266629813893,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.007920812603648424,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.010011068789269785,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.010918709509392194,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.014506033696438493,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.015342328835582208,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-market",
+      "worst": 0.0035300587832233403,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0010243454050837372,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.001039010031454561,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0016052562904597149,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0016241129378488268,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.003469833026795052,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0035300587832233403,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-offers",
+      "worst": 0.000432149328567528,
+      "where": "390 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0001603295866994497,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.00016106135112984427,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.00022904228204322476,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.00022438695110738683,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.000432149328567528,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.00042544741479881847,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-quality",
+      "worst": 0.00024029316325388834,
+      "where": "900 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.00020636606861819328,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.00021521875983632357,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.00024029316325388834,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.00022602663086046773,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.00022806567083024967,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.00021296198402029936,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-recruiters",
+      "worst": 0.010909319645732688,
+      "where": "1440 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.009759460547504026,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.010909319645732688,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.009780820023508262,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.010899536748945586,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.009407883313075186,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.010382589569948487,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-sources",
+      "worst": 0.0002754820936639118,
+      "where": "900 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.00020887462428040144,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0002146059401905344,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0002754820936639118,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.00023923444976076556,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.00006033182503770739,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.00006191950464396285,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "insights-tat",
+      "worst": 0.01589169000933707,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.008518975243289487,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.009767170623462731,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.011068416119962511,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.01298578569197126,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.013692451339510163,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.01589169000933707,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "job-activity",
+      "worst": 0.11201686151420037,
+      "where": "390 dark",
+      "note": "81px shorter than the prototype",
+      "known": "Production moves a close stamped before the last stage hop onto that hop, so closes the prototype dated months earlier fall inside the 200-day feed.",
+      "ok": false,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.019137947384106856,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.02261524966810263,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.03873186673043201,
+          "note": "20px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.04411419310271534,
+          "note": "20px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.09638761265017919,
+          "note": "81px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.11201686151420037,
+          "note": "81px shorter than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "job-board",
+      "worst": 0.00798845404108562,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0022549272742921076,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.002306028918151304,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0023982815264088956,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0023384719063263416,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.007746663667716299,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.00798845404108562,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "job-details",
+      "worst": 0.00185571079011761,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.001489000405515004,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0015789740470397405,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.00178125082221696,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.00185571079011761,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0011486087867368193,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0011618527035650217,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "job-insights",
+      "worst": 0.004402660099892873,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.002200085541221621,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0023356221389929255,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0028215710551657723,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0029756500206355755,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.004271881130264201,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.004402660099892873,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "job-people",
+      "worst": 0.004609838303681898,
+      "where": "390 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.002146662550267566,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0021939615591653207,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0029568411386593206,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.002946391817865172,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.004609838303681898,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.00460201658204986,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "jobs",
+      "worst": 0.0026803902648225584,
+      "where": "390 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0013655462184873949,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.001318342151675485,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0021188920012449423,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0020321610125531692,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0026803902648225584,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0025983290859456828,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "jobs-approval",
+      "worst": 0.007223333333333333,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.005047916666666667,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.004986111111111111,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.007014444444444445,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.007223333333333333,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0009575104727707959,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0009091746075588086,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "jobs-archive",
+      "worst": 0.003016445850636082,
+      "where": "390 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0014448736610308663,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0014098831784421304,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0022345388720934572,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0021550404956518494,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.003016445850636082,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.002971129127941467,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "manpower",
+      "worst": 0.01745846313603323,
+      "where": "1440 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.017095015576323987,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.01745846313603323,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.014804219922905254,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.015479137079867452,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.01343461683983818,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.014972787333740795,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "manpower-employees",
+      "worst": 0.015031315240083507,
+      "where": "390 light",
+      "note": "20px shorter than the prototype",
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.012013888888888888,
+          "note": "20px shorter than the prototype"
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.011993164630599186,
+          "note": "20px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.012785922047702153,
+          "note": "20px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.01275043630017452,
+          "note": "20px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.015031315240083507,
+          "note": "20px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.015003211819495745,
+          "note": "20px shorter than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "manpower-positions",
+      "worst": 0.0063997828542922955,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.004689402775943777,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.004847608279413706,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0061733937820033155,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0063997828542922955,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.005079393278007597,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0051500308775135565,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "my-hiring",
+      "worst": 0.008693542695836274,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.004656084656084656,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.005071025994939038,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0052889590458651235,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.005721301411909146,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.008022377087744061,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.008693542695836274,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "offers",
+      "worst": 0.004213849218407104,
+      "where": "900 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0032936385723573896,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.003273962289977073,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.004213849218407104,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0041098619129612745,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0015759644354549859,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0016124841104298787,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "onboarding",
+      "worst": 0.012677943306434927,
+      "where": "900 dark",
+      "note": "16px shorter than the prototype",
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.011159143800400497,
+          "note": "16px shorter than the prototype"
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.011433809601125723,
+          "note": "16px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.012381026277674323,
+          "note": "16px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.012677943306434927,
+          "note": "16px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0109508547008547,
+          "note": "16px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.010974838653410082,
+          "note": "16px shorter than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "onboarding-probation",
+      "worst": 0.00033194790800775836,
+      "where": "1440 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0003122748683845941,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.00033194790800775836,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.000042688495010507094,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.00004147825417258034,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.000025609014373059317,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.000024624052281787806,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "overview",
+      "worst": 0.002921371888382885,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.002338027442484267,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0025617713814092644,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.002654177002727486,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.002921371888382885,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0025146017621505957,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.00271416405033491,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "overview-month",
+      "worst": 0.0028910116380959435,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.002296223219505485,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0024767658791567796,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0026641736705048935,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0028910116380959435,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.002529413025726775,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0026847364082296056,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "scheduling",
+      "worst": 0.0024764874388419904,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0015989809110959008,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0016192612872968793,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0024602631378812076,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0024764874388419904,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0015733752478512034,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.001575407740635854,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "scheduling-interviewers",
+      "worst": 0.018513065881486934,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.008023288656087917,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.008699759496054366,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.010374307488962007,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.011327512022272843,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.017409505342753095,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.018513065881486934,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "scheduling-load",
+      "worst": 0.017842060319707073,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.008561512930954113,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.008282639704648431,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.010598403523259015,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.01149481603816864,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.016596392247552025,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.017842060319707073,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "scheduling-tasks",
+      "worst": 0.0017087830687830688,
+      "where": "900 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0010979512414769073,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0011640186114327373,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.001621164021164021,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0017087830687830688,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0008254261432227534,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0008746197305519339,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "worst": 0.003333766008999654,
+      "where": "1440 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.003013153340256144,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.003333766008999654,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0017310863739435167,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0018362193362193363,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.001983279331173247,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.002093683747349894,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "settings-access",
+      "worst": 0.006142835823967725,
+      "where": "1440 light",
+      "note": "18px taller than the prototype",
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.006142835823967725,
+          "note": "18px taller than the prototype"
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.005592091721213618,
+          "note": "18px taller than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0025630614002707026,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.002827201509372052,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.003854030561656149,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.00435953036242158,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "settings-approvals",
+      "worst": 0.014807472023966869,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.00811479006345349,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.007970500877548265,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.012000790826413602,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.012623566627125346,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.014102564102564103,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.014807472023966869,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "settings-audit",
+      "worst": 0.615815964956335,
+      "where": "390 dark",
+      "note": "5065px taller than the prototype",
+      "known": "Production shows real audit entries, including the ones this test run just wrote.",
+      "ok": false,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.5774300171072712,
+          "note": "4968px taller than the prototype"
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.5828394224142175,
+          "note": "4968px taller than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.5837861218479661,
+          "note": "4975px taller than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.5909461930179766,
+          "note": "4975px taller than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.6064900532909238,
+          "note": "5065px taller than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.615815964956335,
+          "note": "5065px taller than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "settings-automations",
+      "worst": 0.1409644869610798,
+      "where": "390 dark",
+      "note": "13px taller than the prototype",
+      "known": "Each rule prints the event the engine actually raises — requisition.approved rather than the prototype’s job.opened — and the longer name wraps one line further at 900 and below.",
+      "ok": false,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.015332924836601307,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.015971200980392158,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.10203703703703704,
+          "note": "13px taller than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.10849591717701954,
+          "note": "13px taller than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.12517800200934784,
+          "note": "13px taller than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.1409644869610798,
+          "note": "13px taller than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "settings-data",
+      "worst": 0.6748120931012322,
+      "where": "390 dark",
+      "note": "3279px shorter than the prototype",
+      "known": "Production prints the real collection sizes from the database.",
+      "ok": false,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.6088710124058485,
+          "note": "2596px shorter than the prototype"
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.6183397024073254,
+          "note": "2596px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.6278635204081633,
+          "note": "2748px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.6407183012093727,
+          "note": "2748px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.651280654204737,
+          "note": "3279px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.6748120931012322,
+          "note": "3279px shorter than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "settings-integrations",
+      "worst": 0.3504335761359695,
+      "where": "390 dark",
+      "note": "344px taller than the prototype",
+      "known": "Production reports each provider as configured or not; the prototype showed a fixed list as connected.",
+      "ok": false,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.22271693195138503,
+          "note": "262px taller than the prototype"
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.22773651983465976,
+          "note": "262px taller than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.258148758313503,
+          "note": "282px taller than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.27257733845872234,
+          "note": "282px taller than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.30908375356866513,
+          "note": "344px taller than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.3504335761359695,
+          "note": "344px taller than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "settings-org",
+      "worst": 0.01878416512695248,
+      "where": "390 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.008443972901417225,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.00857948744570766,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.010228105485885328,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.010119901601555108,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.01878416512695248,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.018515889502454842,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "settings-pipelines",
+      "worst": 0.0021778576398981757,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.001815263436589886,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0019479194245874151,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0016571105898705587,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0017774302840761012,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0019699812382739214,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0021778576398981757,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "settings-pitch",
+      "worst": 0.011550888529886914,
+      "where": "390 dark",
+      "note": "20px shorter than the prototype",
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.0035930691721132897,
+          "note": "1px shorter than the prototype"
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0035413262527233115,
+          "note": "1px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.004749271743653766,
+          "note": "1px shorter than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.005085310029130254,
+          "note": "1px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.011374839484694088,
+          "note": "20px shorter than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.011550888529886914,
+          "note": "20px shorter than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "settings-teams",
+      "worst": 0.007816778690565098,
+      "where": "390 dark",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.004009409440632148,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.004127677271782075,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.005305338783599653,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.005551220116437508,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0074898348684756455,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.007816778690565098,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "settings-templates",
+      "worst": 0.03939897395620938,
+      "where": "390 dark",
+      "note": "71px taller than the prototype",
+      "known": "Production carries the acknowledgement template the shipped automation rule refers to; the prototype’s rule pointed at a template that did not exist, so its list is one row shorter.",
+      "ok": false,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.03202332573429808,
+          "note": "71px taller than the prototype"
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.031077576238147157,
+          "note": "71px taller than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.033888407332498635,
+          "note": "71px taller than the prototype"
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.03324408488233972,
+          "note": "71px taller than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.03828230804472705,
+          "note": "71px taller than the prototype"
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.03939897395620938,
+          "note": "71px taller than the prototype"
+        }
+      ]
+    },
+    {
+      "id": "sign-in",
+      "worst": 0.13628630453275004,
+      "where": "390 light",
+      "note": null,
+      "known": "The production screen adds the single sign-on option and drops the prototype-account list.",
+      "ok": false,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.025763888888888888,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.026339583333333333,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.041223333333333334,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.04214111111111111,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.13628630453275004,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.1281686717705675,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "team",
+      "worst": 0.008003978094647654,
+      "where": "1440 light",
+      "note": null,
+      "known": null,
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.008003978094647654,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.0034033374664186817,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.0066029830735713085,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.0043254566783978545,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.0012775738037670518,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.0014581654278976747,
+          "note": null
+        }
+      ]
+    },
+    {
+      "id": "team-profile",
+      "worst": 0.009456104352134597,
+      "where": "390 dark",
+      "note": null,
+      "known": "Production moves a close stamped before the last stage hop onto that hop, so the last spell the prototype drops as negative is counted, and each stage reads a few applications higher.",
+      "ok": true,
+      "captures": [
+        {
+          "viewport": "1440",
+          "theme": "light",
+          "pct": 0.006601482975663511,
+          "note": null
+        },
+        {
+          "viewport": "1440",
+          "theme": "dark",
+          "pct": 0.00706129414840963,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "light",
+          "pct": 0.004882698776110122,
+          "note": null
+        },
+        {
+          "viewport": "900",
+          "theme": "dark",
+          "pct": 0.005059922552926878,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "light",
+          "pct": 0.00873523661803435,
+          "note": null
+        },
+        {
+          "viewport": "390",
+          "theme": "dark",
+          "pct": 0.009456104352134597,
+          "note": null
+        }
+      ]
+    }
+  ],
+  "missing": [],
+  "consoleErrors": []
+}

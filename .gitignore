@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.env.local
+.env
+.storage/
+*.log
+tests/visual/out/
+tests/visual/diff/
+.DS_Store
+
+# build artefacts
+tsconfig.tsbuildinfo

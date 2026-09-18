@@ -1,0 +1,155 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   The design system, in the order it has to load.
+
+     01-design.css     the structural system and the brand tokens
+     02-extra.css      the components the feature modules added
+     03-theme-neo.css  THE THEME — the neumorphic paper-cut skin over the two
+
+   The first three files are carried over from the prototype untouched — a test
+   checks they still match it byte for byte. They are the visual specification:
+   the components in components/ui and components/charts emit exactly the
+   markup they were written against, so the result is the same interface rather
+   than a reconstruction of it. Removing 03-theme-neo.css returns the iOS theme
+   underneath, as it always did.
+
+     04-parity.css     the quirks-mode metrics the prototype relied on
+
+   The fourth is ours. The prototype has no doctype and so renders in quirks
+   mode; production does not, and a handful of line boxes come out taller for
+   it. That file puts them back, one measured rule at a time.
+
+   Anything below the imports is production-only: the things a single-file
+   prototype had no need of — a print stylesheet, the reduced-motion pass, the
+   focus ring that a keyboard user needs and a mouse user never sees.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import './styles/01-design.css';
+@import './styles/02-extra.css';
+@import './styles/03-theme-neo.css';
+@import './styles/04-parity.css';
+
+/* ── Fonts ─────────────────────────────────────────────────────────────────
+   Manrope is the closest open face to the reference. It is loaded by the
+   layout with next/font, which self-hosts it — so there is no request to a
+   third party on a page showing candidate data, and no flash of fallback. */
+
+/* ── Keyboard focus ───────────────────────────────────────────────────────
+   The prototype relied on the browser default, which several of the themed
+   surfaces then hid. A visible focus ring is not decoration: without it the
+   command palette, the board and every sheet are unusable by keyboard. */
+:where(a, button, [role='button'], [role='switch'], input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+:where(button, [role='button']):focus:not(:focus-visible) { outline: none; }
+
+/* Skip link — the first stop for a keyboard user on every page. */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 200;
+  padding: 10px 16px;
+  border-radius: var(--r-pill, 999px);
+  background: var(--brand-500);
+  color: var(--on-brand);
+  font-weight: 700;
+  font-size: 13px;
+  transition: top .16s ease;
+}
+.skip-link:focus { top: 12px; }
+
+/* ── Screen-reader only ───────────────────────────────────────────────────
+   Used for the live region that announces a toast, and for the labels the
+   design gives as an icon alone. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Pending state ────────────────────────────────────────────────────────
+   Every action goes to the server, so there is a moment between the click and
+   the answer. The control that was pressed says so rather than looking dead. */
+[data-pending='1'] {
+  opacity: .62;
+  pointer-events: none;
+  cursor: progress;
+}
+[data-pending='1']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .28), transparent);
+  background-size: 200% 100%;
+  animation: pending-sheen 1.1s linear infinite;
+  pointer-events: none;
+}
+@keyframes pending-sheen { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* A whole view waiting on the server: the content stays readable and stops
+   accepting input, rather than being replaced by a spinner. */
+.view[data-busy='1'] { cursor: progress; }
+.view[data-busy='1'] .card { transition: opacity .18s ease; opacity: .72; }
+
+/* ── Route transitions ───────────────────────────────────────────────────── */
+.route-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  z-index: 300;
+  background: linear-gradient(90deg, var(--brand-300), var(--brand-500), var(--brand-300));
+  transform-origin: 0 50%;
+  animation: route-bar 1.2s ease-in-out infinite;
+}
+@keyframes route-bar {
+  0% { transform: scaleX(0); opacity: 1; }
+  60% { transform: scaleX(.8); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* ── Error boundary ───────────────────────────────────────────────────────
+   A view that could not be drawn says so in the shape of the rest of the
+   product, with the correlation id the logs can be searched by. */
+.errpane {
+  max-width: 640px;
+  margin: 48px auto;
+  text-align: center;
+}
+.errpane .mono {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  font-size: 12px;
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   The theme animates entrances on every chart and counts numbers up. Somebody
+   who has asked for less of that gets the end state immediately. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .route-bar { display: none; }
+}
+
+/* ── Print ────────────────────────────────────────────────────────────────
+   An offer letter, a scorecard and the manpower chart all get printed. The
+   chrome goes, the background art goes, and the ink goes black on white. */
+@media print {
+  .side, .topbar, .tabbar, .bgart, .toasts, #palette, .snav-arrow, .skip-link { display: none !important; }
+  .main, .view { margin: 0 !important; padding: 0 !important; }
+  .card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd !important; }
+  body { background: #fff !important; }
+}
