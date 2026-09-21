@@ -1,0 +1,236 @@
+{
+  "at": "2026-09-21T05:09:27.545Z",
+  "base": "http://localhost:3400",
+  "rows": [
+    {
+      "id": "overview",
+      "path": "/overview",
+      "server": 51.19,
+      "bytes": 452941,
+      "paint": 124,
+      "ready": 195,
+      "nodes": 2571,
+      "script": 207504
+    },
+    {
+      "id": "jobs",
+      "path": "/jobs",
+      "server": 20.209,
+      "bytes": 488359,
+      "paint": 92,
+      "ready": 147,
+      "nodes": 2483,
+      "script": 259544
+    },
+    {
+      "id": "job board",
+      "path": "/jobs/job_01",
+      "server": 34.229,
+      "bytes": 244044,
+      "paint": 100,
+      "ready": 123,
+      "nodes": 1350,
+      "script": 139580
+    },
+    {
+      "id": "job insights",
+      "path": "/jobs/job_01?tab=insights",
+      "server": 26.276,
+      "bytes": 192514,
+      "paint": 104,
+      "ready": 101,
+      "nodes": 1154,
+      "script": 87807
+    },
+    {
+      "id": "candidates",
+      "path": "/candidates",
+      "server": 14.038,
+      "bytes": 1150900,
+      "paint": 72,
+      "ready": 214,
+      "nodes": 6370,
+      "script": 688689
+    },
+    {
+      "id": "scheduling",
+      "path": "/scheduling",
+      "server": 16.132,
+      "bytes": 58807,
+      "paint": 0,
+      "ready": 61,
+      "nodes": 399,
+      "script": 29952
+    },
+    {
+      "id": "scheduling · load",
+      "path": "/scheduling?tab=load",
+      "server": 17.013,
+      "bytes": 334586,
+      "paint": 84,
+      "ready": 105,
+      "nodes": 2015,
+      "script": 137435
+    },
+    {
+      "id": "offers",
+      "path": "/offers",
+      "server": 16.075000000000003,
+      "bytes": 209828,
+      "paint": 96,
+      "ready": 111,
+      "nodes": 1516,
+      "script": 124308
+    },
+    {
+      "id": "onboarding",
+      "path": "/onboarding",
+      "server": 19.253,
+      "bytes": 207254,
+      "paint": 96,
+      "ready": 95,
+      "nodes": 1393,
+      "script": 122733
+    },
+    {
+      "id": "manpower",
+      "path": "/manpower",
+      "server": 21.051000000000002,
+      "bytes": 85653,
+      "paint": 0,
+      "ready": 52,
+      "nodes": 634,
+      "script": 45154
+    },
+    {
+      "id": "team",
+      "path": "/team",
+      "server": 13.026000000000002,
+      "bytes": 117416,
+      "paint": 76,
+      "ready": 76,
+      "nodes": 772,
+      "script": 56833
+    },
+    {
+      "id": "team · person",
+      "path": "/team/stf_02",
+      "server": 19.059,
+      "bytes": 415115,
+      "paint": 88,
+      "ready": 148,
+      "nodes": 2554,
+      "script": 223777
+    },
+    {
+      "id": "insights · scorecard",
+      "path": "/insights?tab=overview",
+      "server": 27.591,
+      "bytes": 199460,
+      "paint": 124,
+      "ready": 135,
+      "nodes": 1179,
+      "script": 72206
+    },
+    {
+      "id": "insights · turnaround",
+      "path": "/insights?tab=tat",
+      "server": 17.823,
+      "bytes": 429668,
+      "paint": 100,
+      "ready": 145,
+      "nodes": 2595,
+      "script": 225902
+    },
+    {
+      "id": "insights · recruiters",
+      "path": "/insights?tab=recruiters",
+      "server": 15.012,
+      "bytes": 112027,
+      "paint": 92,
+      "ready": 83,
+      "nodes": 697,
+      "script": 56400
+    },
+    {
+      "id": "insights · sources",
+      "path": "/insights?tab=sources",
+      "server": 19.089000000000002,
+      "bytes": 131461,
+      "paint": 0,
+      "ready": 69,
+      "nodes": 689,
+      "script": 49549
+    },
+    {
+      "id": "insights · departments",
+      "path": "/insights?tab=departments",
+      "server": 15.454,
+      "bytes": 201281,
+      "paint": 76,
+      "ready": 67,
+      "nodes": 1226,
+      "script": 82855
+    },
+    {
+      "id": "insights · pay",
+      "path": "/insights?tab=market",
+      "server": 17.704,
+      "bytes": 772675,
+      "paint": 80,
+      "ready": 172,
+      "nodes": 5698,
+      "script": 475985
+    },
+    {
+      "id": "insights · quality",
+      "path": "/insights?tab=quality",
+      "server": 24.964,
+      "bytes": 137430,
+      "paint": 0,
+      "ready": 133,
+      "nodes": 1106,
+      "script": 76692
+    },
+    {
+      "id": "insights · interviewers",
+      "path": "/insights?tab=interviewers",
+      "server": 18.32,
+      "bytes": 199978,
+      "paint": 80,
+      "ready": 80,
+      "nodes": 1658,
+      "script": 117524
+    },
+    {
+      "id": "insights · offers",
+      "path": "/insights?tab=offers",
+      "server": 22.332,
+      "bytes": 288028,
+      "paint": 88,
+      "ready": 101,
+      "nodes": 2188,
+      "script": 176597
+    },
+    {
+      "id": "insights · budget",
+      "path": "/insights?tab=budget",
+      "server": 15.513,
+      "bytes": 83911,
+      "paint": 0,
+      "ready": 56,
+      "nodes": 576,
+      "script": 38937
+    },
+    {
+      "id": "settings",
+      "path": "/settings",
+      "server": 19.563,
+      "bytes": 299045,
+      "paint": 76,
+      "ready": 84,
+      "nodes": 1659,
+      "script": 159203
+    }
+  ]
+}

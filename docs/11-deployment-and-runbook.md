@@ -119,6 +119,80 @@ you are chasing something.
 
 ---
 
+## Speed
+
+`npm run dev` is for changing the product. `npm run serve` is for using it: it
+builds and serves, and it is several times faster because React, the bundler
+and the framework all stop doing the work that only a person editing the code
+needs. A development server also recompiles on every save, and every request
+during that recompile waits — so an application that is being edited while it
+is being used will feel slow however fast it is.
+
+```bash
+npm run serve      # build and serve, for using the tool
+npm run dev        # for changing it
+```
+
+### What it actually costs
+
+Measured on the seeded dataset, against a production build:
+
+| | |
+| --- | --- |
+| Every page's database reads, added together | **154ms** |
+| Server think time, per page | 13–51ms |
+| First load of a page | 52–214ms |
+| A click, once the destination has been prefetched | **~130ms** |
+| A click to a page nobody has hovered | 400–900ms |
+
+The database has never been the constraint. Almost all of the time a click
+takes is the page coming back and the browser rebuilding the tree, which is why
+the work went into fetching before the click rather than into the queries.
+
+Three things carry that:
+
+- **Resting the pointer on something starts fetching it.** Ninety milliseconds
+  of sustained hover — or a keyboard focus — is treated as intent, and the page
+  is on its way before the press lands. It is capped and de-duplicated so that
+  sweeping a pointer across a chart full of marks does not fire forty requests.
+- **The loading screen waits a quarter of a second before appearing.** Most
+  pages arrive before that, so it is never seen; a genuinely slow one still
+  says it is working. A spinner that flashes for a tenth of a second makes a
+  fast product feel slow.
+- **Charts measure their width before the browser paints, not after.** They
+  cannot know how wide they are until they are in the page, so each is drawn
+  once at a guess and again at the truth; doing the second draw in a layout
+  effect means the page paints once instead of twitching a frame later.
+
+### Measuring it again
+
+```bash
+npm run perf           # every route: server time, paint, payload, DOM nodes
+npm run perf:cold      # the first visit to each route, compile included
+npm run perf:queries   # the data layer alone, with a statement count
+npx tsx tests/perf/clicks.ts            # press-to-content, with hover
+npx tsx tests/perf/clicks.ts --nohover  # and without, which is the worst case
+```
+
+`perf:queries` needs no server. The rest drive whatever is on port 3400, so
+say which build you are measuring — the two are not comparable.
+
+> Turbopack was tried and is **not** used: `npm run dev:turbo` measured 1743ms
+> per first route visit against webpack's 124ms, because it compiles each route
+> on demand where webpack warms them at boot. It is left in place so the next
+> person does not have to find that out again.
+
+### If the port is stuck
+
+`next dev` and `next start` both spawn a child that holds the socket, so
+killing the npm wrapper can leave a server listening. A second one then fails
+to bind and the old one keeps answering — which means anything measured
+afterwards is measuring the wrong build.
+
+```bash
+powershell -File scripts/port.ps1
+```
+
 ## When something is wrong
 
 ### Nothing is being sent

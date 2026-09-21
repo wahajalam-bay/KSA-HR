@@ -86,10 +86,28 @@ export function ChartFrame({
 /* Measure the box the chart is in, so the number of axis labels follows the
    space there actually is. The first render uses `initial`, which is what the
    server sends and what a visual baseline without JavaScript captures. */
+/* A layout effect on the client, a plain one on the server.
+
+   `useLayoutEffect` has no meaning during server rendering and React says so
+   loudly, so the choice is made once, here, rather than with a suppression at
+   each call site. */
+const useMeasure = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
+
+/**
+ * The width a chart has to draw into.
+ *
+ * A chart cannot know its width until it is in the page, so it is drawn once at
+ * a guess and again at the truth. What matters is *when* the second draw
+ * happens: after a plain effect the browser has already painted the guess, so
+ * every chart on the page visibly resizes itself a frame after it appears — on
+ * the Overview that is a dozen charts twitching at once, which reads as the
+ * page struggling. Measuring in a layout effect puts the correction before the
+ * paint, so there is one.
+ */
 export function useWidth(initial = 720): [React.RefObject<HTMLDivElement | null>, number] {
   const ref = React.useRef<HTMLDivElement | null>(null);
   const [w, setW] = React.useState(initial);
-  React.useEffect(() => {
+  useMeasure(() => {
     const el = ref.current;
     if (!el) return;
     const measure = () => {

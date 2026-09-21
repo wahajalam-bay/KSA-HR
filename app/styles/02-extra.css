@@ -448,6 +448,24 @@ label.chip{cursor:pointer;user-select:none}
 .boot{
   display:grid; place-items:center; gap:16px;
   min-height:100%; height:100%; padding:24px; text-align:center;
+
+  /* ── Why this waits before it appears ─────────────────────────────────
+     Most pages come back in about a tenth of a second. A spinner that appears
+     and vanishes in that time is not reassurance, it is a flicker — and a
+     screen that flickers on every click reads as slower than one that simply
+     changes, even when the clock says otherwise.
+
+     So the loader holds at nothing for a quarter of a second and only then
+     fades in. A fast page is never interrupted by it; a genuinely slow one
+     still says it is working. `both` is what makes the delay silent: the
+     element keeps the animation's opening frame while it waits. */
+  animation:boot-in .18s var(--ease-out, ease-out) .25s both;
+}
+@keyframes boot-in{ from{ opacity:0 } to{ opacity:1 } }
+/* Still delayed without motion — waiting is not animation — but it arrives
+   rather than fading. */
+@media (prefers-reduced-motion:reduce){
+  .boot{ animation:boot-in .01s linear .25s both }
 }
 /* Standing on its own — not-found, the error page — there is no shell around
    it, so there it does take the window. */

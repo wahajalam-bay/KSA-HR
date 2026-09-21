@@ -310,16 +310,67 @@ export function AppClient({ children, isPortal }: { children: React.ReactNode; i
       gPressed.current = ev.key === 'g';
     };
 
+    /* ── Fetching the page before it is asked for ─────────────────────────
+
+       Every route in this product is dynamic, so a click is a round trip: the
+       server reads, renders, and sends the tree back before anything changes on
+       screen. That is about a tenth of a second, which is quick — but it is a
+       tenth of a second in which nothing happens, and that is what people call
+       slow.
+
+       Resting the pointer on something is a decision. Half of it, anyway: by
+       the time somebody has held a nav item for a moment they have usually made
+       up their mind. So that moment is spent fetching, and the click that
+       follows has nothing left to wait for.
+
+       It is deliberately not on every `go` in the page. A chart has dozens of
+       marks, each pointing at a different filtered list, and sweeping a pointer
+       across one must not fire forty requests. Sustained hover, one request per
+       destination, and a cap. */
+    const prefetched = new Set<string>();
+    let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+    const PREFETCH_LIMIT = 24;
+
+    const worthPrefetching = (el: HTMLElement): string | null => {
+      if (prefetched.size >= PREFETCH_LIMIT) return null;
+      if (el.dataset.act !== 'go') return null;
+      const to = el.dataset.v ?? '';
+      if (!to.startsWith('/') || prefetched.has(to)) return null;
+      return to;
+    };
+
+    const onIntent = (ev: Event) => {
+      const el = (ev.target as Element | null)?.closest<HTMLElement>('[data-act="go"]');
+      if (!el) return;
+      const to = worthPrefetching(el);
+      if (!to) return;
+      if (hoverTimer) clearTimeout(hoverTimer);
+      /* Long enough that crossing a list on the way somewhere else costs
+         nothing, short enough to be ready before the click lands. */
+      hoverTimer = setTimeout(() => {
+        prefetched.add(to);
+        try { router.prefetch(to); } catch { /* a route that cannot be prefetched is not an error */ }
+      }, 90);
+    };
+    const onLeave = () => { if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; } };
+
     document.addEventListener('click', onClick);
     document.addEventListener('change', onChange);
     document.addEventListener('input', onInput);
     document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerover', onIntent, { passive: true });
+    document.addEventListener('pointerout', onLeave, { passive: true });
+    document.addEventListener('focusin', onIntent);
     return () => {
       document.removeEventListener('click', onClick);
       document.removeEventListener('change', onChange);
       document.removeEventListener('input', onInput);
       document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerover', onIntent);
+      document.removeEventListener('pointerout', onLeave);
+      document.removeEventListener('focusin', onIntent);
       if (liveTimer) clearTimeout(liveTimer);
+      if (hoverTimer) clearTimeout(hoverTimer);
     };
   }, [fire, closeSheet, confirmer, isPortal, paletteOpen, router]);
 
