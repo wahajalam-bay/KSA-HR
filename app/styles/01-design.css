@@ -296,12 +296,14 @@ button{cursor:pointer;background:none;border:0;padding:0}
     -webkit-backdrop-filter:blur(30px) saturate(180%);
     border-top:1px solid var(--sep);
   }
-  .tabbar button{display:flex;flex-direction:column;align-items:center;gap:2px;
+  /* The tabs are anchors so that a tap works before the page has hydrated;
+     they were buttons, and both are named here so neither can drift. */
+  .tabbar a,.tabbar button{display:flex;flex-direction:column;align-items:center;gap:2px;
     padding:6px 2px;border-radius:var(--r-sm);color:var(--ink-3);
     font-size:10px;font-weight:600;letter-spacing:-.01em;
     transition:color var(--fast),transform var(--fast)}
-  .tabbar button:active{transform:scale(.92)}
-  .tabbar button.on{color:var(--brand-500)}
+  .tabbar a:active,.tabbar button:active{transform:scale(.92)}
+  .tabbar a.on,.tabbar button.on{color:var(--brand-500)}
 }
 
 /* ═══ cards & surfaces ════════════════════════════════════════════════════ */

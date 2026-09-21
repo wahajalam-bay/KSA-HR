@@ -472,3 +472,14 @@ label.chip{cursor:pointer;user-select:none}
 body>.boot,
 main.boot:not(.view){ min-height:100dvh }
 .boot .t-sub{ max-width:34ch; margin:0 }
+
+/* ── Paging a list ────────────────────────────────────────────────
+   Two links and the range between them, in the row the list already sits in.
+   The ends are spans rather than links when there is nowhere to go, so the
+   control keeps its width and nothing shifts as somebody pages through. */
+.pager{
+  display:flex; align-items:center; justify-content:center; gap:14px;
+  margin:14px 0 4px;
+}
+.pager .t-foot{ min-width:20ch; text-align:center }
+.pager [aria-disabled="true"]{ opacity:.45; pointer-events:none }

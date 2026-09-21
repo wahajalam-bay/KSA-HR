@@ -46,7 +46,12 @@ const TABS: Array<[string, Make]> = [
    out of the tab order — which is a decision worth holding to, not an
    oversight to be fixed later by inventing a page. */
 const EXPLAINING: Array<[string, Make]> = [
-  ['Hires & pay', async (c) => React.createElement(Market, { d: I.market(c) })],
+  ['Hires & pay', async (c) => React.createElement(Market, {
+    d: I.market(c),
+    /* The tab pages its long tables from the query string; a test that does not
+       page still has to say where it is. */
+    pageAt: (_k: string, size: number) => ({ offset: 0, size, href: () => '' }),
+  })],
   ['Quality of hire', async (c) => React.createElement(Quality, { d: I.quality(c) })],
   ['Interviewers', async (c, v) =>
     React.createElement(Interviewers, { d: await I.interviewerReport(c, v) })],

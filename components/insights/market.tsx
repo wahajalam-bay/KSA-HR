@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Card, Kpi, Empty, Table, Avatar, Btn, type Column } from '@/components/ui/primitives';
+import { Card, Kpi, Empty, Table, Avatar, Btn, type Column, type Page } from '@/components/ui/primitives';
 import { Icon } from '@/components/ui/icons';
 import { Grouped, Pie, Legend, HBars } from '@/components/charts';
 import { CAT, RAMP } from '@/lib/charts/palette';
@@ -51,7 +51,13 @@ export type MarketData = {
   scopedToDept: boolean;
 };
 
-export function Market({ d }: { d: MarketData }) {
+export function Market({ d, pageAt }: {
+  d: MarketData;
+  /* Where each long table on this tab has got to. Ninety-eight positions of a
+     dozen cells each was four thousand elements and most of the weight of the
+     page; a page of them is forty. */
+  pageAt: (key: string, size: number) => Page;
+}) {
   if (!d.rows.length) {
     return (
       <Empty icon="coin" title="No hires in this period"
@@ -155,7 +161,7 @@ export function Market({ d }: { d: MarketData }) {
       </Card>
 
       <Card title={`Position by position (${d.byPosition.length})`} flush>
-        <Table cols={posCols} rows={d.byPosition} />
+        <Table cols={posCols} rows={d.byPosition} page={pageAt('pos', 40)} />
       </Card>
 
       <div className="grid g-2">
@@ -202,7 +208,7 @@ export function Market({ d }: { d: MarketData }) {
 
       <Card title="The hires behind these numbers" flush
         actions={<span className="t-foot">{fmt.int(d.rows.length)} in {d.periodLabel}</span>}>
-        <Table cols={hireCols} rows={d.rows} />
+        <Table cols={hireCols} rows={d.rows} page={pageAt('hire', 40)} />
       </Card>
     </>
   );

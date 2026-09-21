@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-18T07:52:59.018Z",
+  "at": "2026-09-21T06:39:19.633Z",
   "base": "http://127.0.0.1:3400",
   "routes": 48,
   "roles": [
@@ -10,9 +10,7 @@
     "onboarding",
     "hiringManager"
   ],
-  "walked": 284,
-  "retried": [
-    "coordinator:manpower-positions"
-  ],
+  "walked": 283,
+  "retried": [],
   "findings": []
 }

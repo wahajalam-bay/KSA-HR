@@ -35,7 +35,7 @@ const STEPS: Step[] = [
   { name: 'sidebar · Overview', click: '.nav [data-v="/overview"]', until: '.hero' },
 
   /* Within a page: a tab, a period, a chart mark, a row. */
-  { name: 'subnav · another tab', from: '/insights?tab=overview', click: '.subnav [data-v="sources"]', until: 'text=Volume by channel' },
+  { name: 'subnav · another tab', from: '/insights?tab=overview', click: '.subnav [data-v="sources"]', until: 'text=Cost per hire is not in this dataset' },
   { name: 'period · Month', from: '/overview', click: '[data-act="ov.win"][data-v="30"]', until: '.hero' },
   { name: 'a chart mark', from: '/overview', click: '.cmk[data-act]', until: '.cfilter' },
   { name: 'a candidate row', from: '/candidates', click: '.crow', until: '.sheet, [role=dialog], aside .bd' },
@@ -94,7 +94,13 @@ async function main() {
     }
     const t = Date.now();
     await target.click({ timeout: 15_000 }).catch(() => {});
-    await page.waitForSelector(s.until, { timeout: 20_000 }).catch(() => {});
+    /* Polled, not waited on. `waitForSelector` is resolved in a page context
+       that a full navigation destroys, and its recovery was being counted as
+       the page being slow — 840ms reported for a 360ms navigation. */
+    for (let i = 0; i < 1000; i++) {
+      if (await page.locator(s.until).count().catch(() => 0)) break;
+      await page.waitForTimeout(20);
+    }
     await page.waitForFunction('!document.querySelector(".skel")', undefined, { timeout: 20_000 })
       .catch(() => {});
     const ms = Date.now() - t;

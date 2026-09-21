@@ -316,15 +316,60 @@ const meta = (r: unknown): TableRow => (r ?? {}) as TableRow;
 /* A grid with subgrid rows, so every row can be its own soft card while the
    columns still line up across the header — a real table's alignment with a
    card's shape. */
+/** Where a list is within itself, and how to get to the rest of it. */
+export type Page = {
+  offset: number;
+  size: number;
+  /** The same list at another offset. */
+  href: (offset: number) => string;
+};
+
+/**
+ * One page of a list, as the range shown and the links either side.
+ *
+ * Anchors, not buttons, for the same reason the sidebar uses them: paging
+ * works before the page has hydrated, and a page of a list is somewhere worth
+ * being able to open in a new tab. The ends stay in place as spans when there
+ * is nowhere to go, so nothing shifts as somebody pages through.
+ */
+export function Pager({ total, page }: { total: number; page: Page }) {
+  const { offset, size, href } = page;
+  if (total <= size) return null;
+  const nth = Math.floor(offset / size) + 1;
+  const pages = Math.ceil(total / size);
+  const on = offset + size;
+  return (
+    <nav className="pager" aria-label="Pages">
+      {offset > 0
+        ? <a className="btn sm out" href={href(Math.max(0, offset - size))} rel="prev">Previous</a>
+        : <span className="btn sm out" aria-disabled="true">Previous</span>}
+      <span className="t-foot">
+        {fmt.int(offset + 1)}–{fmt.int(Math.min(total, on))} of {fmt.int(total)}
+        <em className="mut"> · page {fmt.int(nth)} of {fmt.int(pages)}</em>
+      </span>
+      {on < total
+        ? <a className="btn sm out" href={href(on)} rel="next">Next</a>
+        : <span className="btn sm out" aria-disabled="true">Next</span>}
+    </nav>
+  );
+}
+
 export function Table<T extends object>({
-  cols, rows, sortAct, sortKey, sortDir, emptyIcon, emptyTitle, emptySub,
+  cols, rows, sortAct, sortKey, sortDir, emptyIcon, emptyTitle, emptySub, page,
 }: {
   cols: Array<Column<T>>; rows: T[]; sortAct?: string; sortKey?: string; sortDir?: 1 | -1;
   emptyIcon?: IconName; emptyTitle?: string; emptySub?: string;
+  /* A long table is drawn a page at a time. Ninety-eight rows of a dozen
+     cells each is four thousand elements and most of the weight of the page
+     they sit on — and nobody reads to the bottom of one without sorting it
+     first. Given a `page`, the table draws that slice and offers the rest. */
+  page?: Page;
 }) {
   if (!rows.length) {
     return <Empty icon={emptyIcon ?? 'inbox'} title={emptyTitle ?? 'Nothing here yet'} sub={emptySub} />;
   }
+  const total = rows.length;
+  const shown = page ? rows.slice(page.offset, page.offset + page.size) : rows;
   return (
     <div className="tw">
       <div className="tgrid" style={{ gridTemplateColumns: `repeat(${cols.length},auto)` }}>
@@ -337,7 +382,7 @@ export function Table<T extends object>({
             </div>
           ))}
         </div>
-        {rows.map((r, ri) => {
+        {shown.map((r, ri) => {
           const m = meta(r);
           return (
           <div key={ri} className={cls('trow', m._act && 'clickable', m._cls)}
@@ -349,6 +394,7 @@ export function Table<T extends object>({
           );
         })}
       </div>
+      {page && <Pager total={total} page={page} />}
     </div>
   );
 }

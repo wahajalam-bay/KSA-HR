@@ -96,12 +96,25 @@ export type MarkProps = {
   'aria-label'?: string;
 };
 
-/** A tooltip as one line, for the accessible name and for a plain fallback. */
+/** A tooltip as one line, for a plain fallback. */
 export function tipText(t: Tip): string {
   const head = t.value ? `${t.label}: ${t.value}` : t.label;
   const rest = (t.rows ?? []).map(([k, v]) => `${k} ${v}`).join(', ');
   return [head, rest, t.note].filter(Boolean).join(' — ');
 }
+
+/**
+ * What a screen reader says for a mark.
+ *
+ * The mark's own figure, and nothing else. It used to be the whole tooltip
+ * flattened into a sentence, which was both worse to listen to — every
+ * supporting row read out before the next bar — and heavier: on the Overview
+ * alone that was three kilobytes of attribute duplicating three kilobytes of
+ * `data-tip`, twice over once React had serialised it to hydrate with. The
+ * supporting rows are in the tooltip, which opens on focus as well as on
+ * hover, so nothing is lost by not saying them twice.
+ */
+const markName = (t: Tip): string => (t.value ? `${t.label}: ${t.value}` : t.label);
 
 /**
  * Turn a pick into the props a mark carries.
@@ -114,7 +127,7 @@ export function tipText(t: Tip): string {
 export function markProps(pick: Pick | null | undefined, base = 'cmk'): MarkProps {
   if (!pick) return { className: base };
   const acts = !!pick.act;
-  const name = pick.tip ? tipText(pick.tip) : undefined;
+  const name = pick.tip ? markName(pick.tip) : undefined;
 
   return {
     className: [base, acts ? 'pickable' : null, pick.on ? 'on' : null].filter(Boolean).join(' '),

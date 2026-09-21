@@ -25,6 +25,7 @@ export default async function InsightsPage({ searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = q(await searchParams);
+  const pageAt = pagerFactory(sp);
   const { viewer, counts, theme, now } = await chrome();
 
   const tab = I.INSIGHTS_TABS.some((t) => t.v === sp.tab) ? sp.tab : 'overview';
@@ -101,7 +102,7 @@ export default async function InsightsPage({ searchParams }: {
             : tab === 'interviewers' ? <Interviewers d={await I.interviewerReport(c, viewer)} />
               : tab === 'sources' ? <Sources d={I.sources(c)} />
                 : tab === 'departments' ? <Departments d={I.departments(c)} />
-                  : tab === 'market' ? <Market d={I.market(c)} />
+                  : tab === 'market' ? <Market d={I.market(c)} pageAt={pageAt} />
                     : tab === 'quality' ? <Quality d={I.quality(c)} />
                       : tab === 'offers' ? <Offers d={I.offers(c)} now={now} />
                         : tab === 'budget' ? <Budget d={I.budget(c)} />
@@ -109,6 +110,25 @@ export default async function InsightsPage({ searchParams }: {
       </main>
     </>
   );
+}
+
+/* Where a long table on this page has got to.
+
+   A table's offset lives in the query string like every other piece of view
+   state, under its own name so two tables on one tab can be paged
+   independently and neither disturbs the period or the department. */
+function pagerFactory(sp: Record<string, string>) {
+  return (key: string, size: number) => ({
+    offset: Math.max(0, Number(sp[key] ?? 0) || 0),
+    size,
+    href: (o: number) => {
+      const parts = Object.entries(sp)
+        .filter(([k, v]) => v && k !== key)
+        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`);
+      if (o > 0) parts.push(`${key}=${o}`);
+      return parts.length ? `/insights?${parts.join('&')}` : '/insights';
+    },
+  });
 }
 
 /* The recruiter table sorts on the server so the order survives a reload and a

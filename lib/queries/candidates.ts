@@ -30,6 +30,10 @@ import { STAGE_INDEX, slaOf, type StageKey } from '@/lib/domain/stages';
 
 export type CandidateTab = 'pipeline' | 'all' | 'hired' | 'pools';
 
+/** Rows a page of the list holds. Enough to fill a tall screen and scroll a
+ *  little, rather than enough to never need a second page. */
+export const PAGE_SIZE = 40;
+
 export type CandidateFilters = {
   tab: CandidateTab;
   q?: string;
@@ -43,7 +47,15 @@ export type CandidateFilters = {
   tags?: string[];
   poolId?: string;
   sort?: string;
+  /* How many rows to draw, and where to start.
+
+     The list used to send a hundred and twenty rows whatever the screen could
+     show. At roughly fifty elements a row that is six thousand nodes and most
+     of a megabyte of hydration data for a list nobody scrolls to the bottom
+     of — so the page asks for a page, and the count below still reports the
+     whole set. */
   limit?: number;
+  offset?: number;
 
   /* ── Where a chart lands ───────────────────────────────────────────────────
      A mark on a chart stands for a set of APPLICATIONS, and clicking it has to
@@ -110,6 +122,13 @@ const stageAsAt = (alias: string, to: string) => sql`
       ORDER BY h.at::date DESC, h.seq DESC LIMIT 1),
     ${sql.raw(alias)}.stage::text)`;
 
+/* What one row of the list draws, and nothing else.
+
+   Everything here is rendered. The tags, the live flag and the day count were
+   carried for a while and drawn nowhere — a hundred and twenty copies of an
+   array of strings, serialised into the page so the browser could hydrate
+   something that was never on screen. What a row needs, a row gets; the panel
+   reads the whole person when somebody opens it. */
 export type CandidateRow = {
   candidateId: string;
   applicationId: string | null;
@@ -120,18 +139,14 @@ export type CandidateRow = {
   yearsExperience: number | null;
   photo: string | null;
   hue: number;
-  hashtags: string[];
   claimedBy: string | null;
   claimDaysLeft: number | null;
   applications: number;
   jobId: string | null;
   jobTitle: string | null;
-  stage: string | null;
   stageName: string | null;
   stageOrdinal: number;
   status: string | null;
-  live: boolean;
-  daysInStage: number | null;
   sla: ReturnType<typeof slaOf> | null;
   rating: number | null;
   lastAt: string | null;
@@ -139,9 +154,14 @@ export type CandidateRow = {
 
 export async function listCandidates(
   v: Viewer, f: CandidateFilters, clock: Date = new Date(), exec: Exec = db(),
-): Promise<{ rows: CandidateRow[]; total: number; shown: number; tagFacets: Array<{ tag: string; n: number }> }> {
+): Promise<{
+  rows: CandidateRow[]; total: number; shown: number;
+  tagFacets: Array<{ tag: string; n: number }>;
+  offset: number; limit: number;
+}> {
   const scopedJobs = sql`(SELECT id FROM ${jobs} WHERE ${jobScopeSql(v)})`;
-  const limit = f.limit ?? 120;
+  const limit = f.limit ?? PAGE_SIZE;
+  const offset = Math.max(0, f.offset ?? 0);
 
   /* Which applications count in this tab. The predicate is written against
      whichever alias the join below uses — `l` when the tab is a list of
@@ -314,7 +334,7 @@ export async function listCandidates(
       LEFT JOIN ${jobStages} js ON js.job_id = l.job_id AND js.stage_key = l.stage
      WHERE ${whereSql}
      ORDER BY ${order}
-     LIMIT ${limit}`));
+     LIMIT ${limit} OFFSET ${offset}`));
 
   /* The tag facets are counted over the same filtered set, minus the tag filter
      itself — a facet that vanishes the moment you use it is not a facet. */
@@ -344,7 +364,6 @@ export async function listCandidates(
       yearsExperience: r.years_experience == null ? null : Number(r.years_experience),
       photo: r.photo,
       hue: Number(r.hue ?? 3),
-      hashtags: (r.hashtags ?? []) as string[],
       claimedBy: claimLive ? r.claim_by_name : null,
       claimDaysLeft: claimLive
         ? Math.round(Number(r.claim_days) - (now - new Date(r.claim_at).getTime()) / 86_400_000)
@@ -352,19 +371,16 @@ export async function listCandidates(
       applications: Number(r.apps ?? 0),
       jobId: r.job_id ?? null,
       jobTitle: r.job_title ?? null,
-      stage: r.stage ?? null,
       stageName: r.stage_name ?? r.stage ?? null,
       stageOrdinal: Number(r.stage_ord ?? STAGE_INDEX[r.stage as StageKey] ?? 0),
       status: r.status ?? null,
-      live,
-      daysInStage: live ? days : null,
       sla: live && days != null ? slaOf(days, Number(r.sla ?? 5)) : null,
       rating: r.ev_mean == null ? (r.rating == null ? null : Number(r.rating)) : Number(r.ev_mean),
       lastAt: r.closed_at ?? r.applied_at ?? r.created_at ?? null,
     };
   });
 
-  return { rows, total, shown: rows.length, tagFacets };
+  return { rows, total, shown: rows.length, tagFacets, offset, limit };
 }
 
 /* The dropdowns. Counted over what this account may see, so a filter never

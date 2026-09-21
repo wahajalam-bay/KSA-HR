@@ -119,7 +119,25 @@ export function Sidebar({ viewer, counts, orgName }: {
             {g.items.map((i) => {
               const n = i.count ? counts[i.count] : null;
               return (
-                <button key={i.v} className={`nav-item${view === i.v ? ' on' : ''}`}
+                /* An anchor, not a button, and the difference is worth a
+                   paragraph.
+
+                   Everything in this interface is driven by one delegated
+                   listener, which exists only once React has hydrated. On a
+                   heavy page that is a few hundred milliseconds after the page
+                   is on screen and plainly clickable — and a click inside that
+                   window is held by React and replayed afterwards, so it costs
+                   the whole remaining hydration. That was the one navigation
+                   that still felt slow.
+
+                   A real `href` is answered by the browser. Before hydration
+                   the click navigates the ordinary way; after it, the listener
+                   below calls preventDefault and routes on the client as it
+                   always did. Nothing about the appearance or the behaviour
+                   changes, and the sidebar gains middle-click and
+                   open-in-new-tab, which a nav should always have had. */
+                <a key={i.v} className={`nav-item${view === i.v ? ' on' : ''}`}
+                  href={`/${i.v}`}
                   data-act="go" data-v={`/${i.v}`}
                   /* `data-tip` rather than `title`: the interface draws its own
                      tooltip, and a native one on top of it would be two. The
@@ -134,7 +152,7 @@ export function Sidebar({ viewer, counts, orgName }: {
                   <span className="ic"><Icon name={i.ic} size={17} /></span>
                   <span className="lb">{i.t}</span>
                   {n != null && <span className="cnt">{fmt.int(n)}</span>}
-                </button>
+                </a>
               );
             })}
           </div>
@@ -159,10 +177,11 @@ export function TabBar({ isPortal }: { isPortal: boolean }) {
   return (
     <nav className="tabbar" id="tabbar">
       {tabs.map((i) => (
-        <button key={i.v} className={view === i.v ? 'on' : ''} data-act="go" data-v={`/${i.v}`}>
+        <a key={i.v} className={view === i.v ? 'on' : ''} href={`/${i.v}`}
+          data-act="go" data-v={`/${i.v}`}>
           <Icon name={i.ic} size={21} />
           <span>{i.t}</span>
-        </button>
+        </a>
       ))}
     </nav>
   );

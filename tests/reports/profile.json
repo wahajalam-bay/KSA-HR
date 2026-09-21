@@ -1,0 +1,293 @@
+{
+  "at": "2026-09-21T06:24:18.960Z",
+  "base": "http://localhost:3400",
+  "rows": [
+    {
+      "id": "overview",
+      "path": "/overview",
+      "server": 25,
+      "visible": 25,
+      "htmlWire": 80,
+      "htmlRaw": 442,
+      "flight": 203,
+      "jsWire": 132,
+      "cssWire": 30,
+      "nodes": 2560,
+      "depth": 18,
+      "svgs": 163,
+      "paint": 84,
+      "interactive": 140,
+      "blocking": 0,
+      "longest": 0,
+      "tasks": 0,
+      "heaviest": [
+        {
+          "what": "div.stack (10 children)",
+          "nodes": 2226
+        },
+        {
+          "what": "div.grid.g-2 (2 children)",
+          "nodes": 452
+        },
+        {
+          "what": "div.grid.g-side (2 children)",
+          "nodes": 378
+        },
+        {
+          "what": "div.g-board (3 children)",
+          "nodes": 371
+        },
+        {
+          "what": "section.card (4 children)",
+          "nodes": 334
+        }
+      ]
+    },
+    {
+      "id": "candidates",
+      "path": "/candidates",
+      "server": 19,
+      "visible": 15,
+      "htmlWire": 67,
+      "htmlRaw": 383,
+      "flight": 225,
+      "jsWire": 124,
+      "cssWire": 30,
+      "nodes": 2250,
+      "depth": 11,
+      "svgs": 238,
+      "paint": 76,
+      "interactive": 100,
+      "blocking": 0,
+      "longest": 0,
+      "tasks": 0,
+      "heaviest": [
+        {
+          "what": "div.card (40 children)",
+          "nodes": 1851
+        },
+        {
+          "what": "button.crow (5 children)",
+          "nodes": 60
+        },
+        {
+          "what": "button.crow (5 children)",
+          "nodes": 58
+        },
+        {
+          "what": "button.crow (5 children)",
+          "nodes": 58
+        },
+        {
+          "what": "div.filters (8 children)",
+          "nodes": 56
+        }
+      ]
+    },
+    {
+      "id": "jobs",
+      "path": "/jobs",
+      "server": 15,
+      "visible": 23,
+      "htmlWire": 79,
+      "htmlRaw": 477,
+      "flight": 253,
+      "jsWire": 132,
+      "cssWire": 30,
+      "nodes": 2472,
+      "depth": 13,
+      "svgs": 229,
+      "paint": 76,
+      "interactive": 106,
+      "blocking": 0,
+      "longest": 0,
+      "tasks": 0,
+      "heaviest": [
+        {
+          "what": "div.stack.sm (29 children)",
+          "nodes": 1922
+        },
+        {
+          "what": "article.card (2 children)",
+          "nodes": 70
+        },
+        {
+          "what": "article.card (2 children)",
+          "nodes": 70
+        },
+        {
+          "what": "article.card (2 children)",
+          "nodes": 69
+        },
+        {
+          "what": "article.card (2 children)",
+          "nodes": 69
+        }
+      ]
+    },
+    {
+      "id": "insights",
+      "path": "/insights?tab=overview",
+      "server": 22,
+      "visible": 21,
+      "htmlWire": 35,
+      "htmlRaw": 194,
+      "flight": 71,
+      "jsWire": 131,
+      "cssWire": 30,
+      "nodes": 1150,
+      "depth": 13,
+      "svgs": 49,
+      "paint": 76,
+      "interactive": 86,
+      "blocking": 0,
+      "longest": 0,
+      "tasks": 0,
+      "heaviest": [
+        {
+          "what": "div.grid.g-2 (4 children)",
+          "nodes": 344
+        },
+        {
+          "what": "div.grid.g-2 (2 children)",
+          "nodes": 250
+        },
+        {
+          "what": "section.card (2 children)",
+          "nodes": 175
+        },
+        {
+          "what": "section.card (4 children)",
+          "nodes": 173
+        },
+        {
+          "what": "div.tgrid (13 children)",
+          "nodes": 167
+        }
+      ]
+    },
+    {
+      "id": "insights · pay",
+      "path": "/insights?tab=market",
+      "server": 23,
+      "visible": 29,
+      "htmlWire": 74,
+      "htmlRaw": 379,
+      "flight": 222,
+      "jsWire": 131,
+      "cssWire": 30,
+      "nodes": 2906,
+      "depth": 16,
+      "svgs": 75,
+      "paint": 80,
+      "interactive": 111,
+      "blocking": 0,
+      "longest": 0,
+      "tasks": 0,
+      "heaviest": [
+        {
+          "what": "section.card (2 children)",
+          "nodes": 1769
+        },
+        {
+          "what": "div.tw (2 children)",
+          "nodes": 1760
+        },
+        {
+          "what": "div.tgrid (41 children)",
+          "nodes": 1754
+        },
+        {
+          "what": "section.card (2 children)",
+          "nodes": 352
+        },
+        {
+          "what": "div.tgrid (29 children)",
+          "nodes": 344
+        }
+      ]
+    },
+    {
+      "id": "team",
+      "path": "/team",
+      "server": 19,
+      "visible": 23,
+      "htmlWire": 26,
+      "htmlRaw": 115,
+      "flight": 56,
+      "jsWire": 131,
+      "cssWire": 30,
+      "nodes": 761,
+      "depth": 13,
+      "svgs": 49,
+      "paint": 92,
+      "interactive": 118,
+      "blocking": 0,
+      "longest": 0,
+      "tasks": 0,
+      "heaviest": [
+        {
+          "what": "div.grid.g-3 (6 children)",
+          "nodes": 305
+        },
+        {
+          "what": "div.grid.g-2 (2 children)",
+          "nodes": 106
+        },
+        {
+          "what": "section.card (3 children)",
+          "nodes": 67
+        },
+        {
+          "what": "div.pie-row (2 children)",
+          "nodes": 58
+        },
+        {
+          "what": "button.pcard (4 children)",
+          "nodes": 51
+        }
+      ]
+    },
+    {
+      "id": "scheduling · load",
+      "path": "/scheduling?tab=load",
+      "server": 13,
+      "visible": 25,
+      "htmlWire": 47,
+      "htmlRaw": 327,
+      "flight": 134,
+      "jsWire": 131,
+      "cssWire": 30,
+      "nodes": 2004,
+      "depth": 17,
+      "svgs": 48,
+      "paint": 76,
+      "interactive": 107,
+      "blocking": 0,
+      "longest": 0,
+      "tasks": 0,
+      "heaviest": [
+        {
+          "what": "section.card (4 children)",
+          "nodes": 1081
+        },
+        {
+          "what": "div.tgrid (50 children)",
+          "nodes": 1069
+        },
+        {
+          "what": "div.grid.g-2 (4 children)",
+          "nodes": 365
+        },
+        {
+          "what": "section.card (3 children)",
+          "nodes": 244
+        },
+        {
+          "what": "div.hbar (141 children)",
+          "nodes": 235
+        }
+      ]
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import { db } from '@/db/client';
 import { talentPools, departments, jobs } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { TopBar } from '@/components/app/shell';
-import { Subnav, Btn, Empty } from '@/components/ui/primitives';
+import { Subnav, Btn, Empty, Pager } from '@/components/ui/primitives';
 import { can } from '@/lib/authz';
 import { fmt } from '@/lib/format';
 import { CandidateFilters } from '@/components/candidates/filters';
@@ -87,10 +87,14 @@ export default async function CandidatesPage({ searchParams }: {
      layer does, by the same definitions the chart counted with. */
   const drill = appFiltersFrom(sp);
 
+  /* A page at a time. The offset travels in the URL like every other piece of
+     view state, so a page of a list can be reloaded, linked and gone back to. */
+  const offset = Math.max(0, Number(sp.from_row ?? 0) || 0);
+
   const data = await listCandidates(viewer, {
     tab, q: sp.q, family: sp.fam, source: sp.src, ownerId: sp.own,
     held: sp.held, tags: (sp.tags ?? '').split(',').filter(Boolean),
-    poolId: sp.pool, sort: sp.sort, ...drill,
+    poolId: sp.pool, sort: sp.sort, offset, ...drill,
   }, now);
 
   /* Names for the chips. Only looked up when a chip needs one. */
@@ -119,7 +123,20 @@ export default async function CandidatesPage({ searchParams }: {
         <DrillChips sp={sp} path="/candidates" chips={chips} />
         {data.rows.length ? (
           <CandidateRows rows={data.rows} total={data.total} shown={data.shown} now={now}
-            unit={tab === 'pipeline' || tab === 'hired' || drill.apps ? 'application' : 'person'} />
+            unit={tab === 'pipeline' || tab === 'hired' || drill.apps ? 'application' : 'person'}
+            pager={
+              <Pager total={data.total} page={{
+                offset: data.offset,
+                size: data.limit,
+                href: (o: number) => {
+                  const next = Object.entries(sp)
+                    .filter(([k, v]) => v && k !== 'from_row')
+                    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`);
+                  if (o > 0) next.push(`from_row=${o}`);
+                  return next.length ? `/candidates?${next.join('&')}` : '/candidates';
+                },
+              }} />
+            } />
         ) : (
           <Empty icon="search" title="Nobody matches" sub="Loosen a filter or clear the tags."
             action={<Btn variant="out" action="cand.clear">Clear filters</Btn>} />

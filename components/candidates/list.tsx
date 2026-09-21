@@ -8,8 +8,10 @@ import type { CandidateRow } from '@/lib/queries/candidates';
    name on them, and how long they have been there. Clicking opens the panel —
    the application's if they are on one, the person's if they are only on file. */
 
-export function CandidateRows({ rows, total, shown, now, unit = 'person' }: {
+export function CandidateRows({ rows, total, shown, now, unit = 'person', pager }: {
   rows: CandidateRow[]; total: number; shown: number; now: Date;
+  /** The pager for this list, when the list has more than one page. */
+  pager?: React.ReactNode;
   /* Two of the tabs, and any list a chart sends here, are lists of
      APPLICATIONS — somebody live on two boards is two rows. Saying "people"
      over those rows would make the count read as wrong against the chart it
@@ -24,12 +26,13 @@ export function CandidateRows({ rows, total, shown, now, unit = 'person' }: {
       <div className="row" style={{ marginBottom: 9 }}>
         <span className="t-sub">
           {fmt.int(total)} {noun}
-          {total > shown && ` · showing the first ${shown}`}
+          {total > shown && ` · ${shown} on this page`}
         </span>
       </div>
       <div className="card" style={{ overflow: 'hidden' }}>
         {rows.map((c) => <CRow key={c.applicationId ?? c.candidateId} c={c} now={now} />)}
       </div>
+      {pager}
     </>
   );
 }
